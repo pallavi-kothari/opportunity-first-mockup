@@ -1,0 +1,2216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opportunity-First CRM — Interactive Mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+// ============================================================
+// DATA
+// ============================================================
+const STAGES = [
+  { id: "s1", name: "New Lead", color: "#818cf8" },
+  { id: "s2", name: "Qualified", color: "#60a5fa" },
+  { id: "s3", name: "Proposal Sent", color: "#fbbf24" },
+  { id: "s4", name: "Negotiation", color: "#fb923c" },
+  { id: "s5", name: "Closed Won", color: "#34d399" },
+];
+
+const OPPS = [
+  {
+    id: "1", name: "Acme Corp Website Redesign", stageId: "s1", value: 15000, status: "open",
+    stageHistory: [
+      { stageId: "s1", entered: "Mar 20, 2026", days: 18 },
+    ],
+    owner: "Pallavi K.", ownerInit: "PK",
+    participants: [
+      { name: "John Smith", role: "Decision Maker", email: "john@acme.com", primary: true, contactTags: ["VIP", "Newsletter"] },
+      { name: "Sarah Chen", role: "Technical Lead", email: "sarah@acme.com", primary: false, contactTags: ["Technical", "Q2 Follow-up"] },
+    ],
+    company: "Acme Corp", source: "Website Form", expectedClose: "May 15, 2026", created: "Mar 20, 2026",
+    tags: ["Enterprise", "Web Design"],
+    products: [{ name: "Website Design Package", qty: 1, price: 10000 }, { name: "SEO Optimization", qty: 1, price: 5000 }],
+    fields: [
+      { g: "Deal Info", f: [{ l: "Pipeline", v: "Sales Pipeline" }, { l: "Stage", v: "New Lead" }, { l: "Value", v: "$15,000" }, { l: "Expected Close", v: "May 15, 2026" }, { l: "Source", v: "Website Form" }] },
+      { g: "Custom Fields", f: [{ l: "Project Type", v: "Website Redesign" }, { l: "Industry", v: "Technology" }, { l: "Budget Range", v: "$10K – $20K" }] },
+    ],
+    activity: [
+      { type: "note", label: "Note added", detail: "Quarterly review — consolidated update across all Acme-related deals, contacts, and projects.", user: "Pallavi K.", time: "1h ago",
+        links: [{ type: "opp", name: "Acme Corp Website Redesign", self: true }, { type: "opp", name: "Acme SEO Retainer" }, { type: "opp", name: "Acme Social Media" }, { type: "contact", name: "John Smith" }, { type: "contact", name: "Sarah Chen" }, { type: "contact", name: "Diana Park" }, { type: "contact", name: "Mike Torres" }, { type: "company", name: "Acme Corp" }, { type: "custom", name: "Project: Acme Redesign", objectType: "Projects" }, { type: "custom", name: "Project: Acme SEO", objectType: "Projects" }, { type: "custom", name: "Contract: MSA-2026", objectType: "Contracts" }, { type: "custom", name: "Ticket: #4521", objectType: "Support Tickets" }] },
+      { type: "note", label: "Note added", detail: "Client wants to prioritize mobile-first. Budget approved by CFO.", user: "Pallavi K.", time: "2h ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "payment", label: "Payment received — $5,000", detail: "Deposit payment via Stripe. Invoice #INV-2026-041.", user: "System", time: "4h ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "email_out", label: "Email sent to John Smith", detail: "Subject: Website Redesign Proposal — Attached proposal PDF and SOW.", user: "Pallavi K.", time: "5h ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "email_in", label: "Email received from John Smith", detail: "Thanks for reaching out! We're definitely interested. Can we set up a call this week?", user: "John Smith", time: "8h ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "sms_out", label: "SMS sent to John Smith", detail: "Hi John, just sent the proposal to your email. Let me know if you have questions!", user: "Pallavi K.", time: "8h ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "appointment", label: "Appointment completed", detail: "Discovery Call — 45 min with John Smith and Sarah Chen. Via Zoom.", user: "Pallavi K.", time: "1d ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "contact", name: "Sarah Chen" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "form", label: "Form submitted", detail: "\"Request a Quote\" form — john@acme.com submitted from /pricing page.", user: "John Smith", time: "1d ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "stage", label: "Stage changed", detail: "New Lead → Qualified", user: "System", time: "1d ago",
+        links: [{ type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "call", label: "Call logged — 30 min", detail: "Discovery call with John and Sarah. Discussed scope, timeline, and budget constraints.", user: "Pallavi K.", time: "2d ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "contact", name: "Sarah Chen" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }, { type: "opp", name: "Acme SEO Retainer" }] },
+      { type: "estimate", label: "Estimate sent — $15,000", detail: "Website Redesign Proposal sent to John Smith. Status: Viewed.", user: "Pallavi K.", time: "2d ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "invoice", label: "Invoice created — $5,000", detail: "Invoice #INV-2026-041 for deposit payment. Sent to john@acme.com.", user: "Pallavi K.", time: "2d ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "company", name: "Acme Corp" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "task", label: "Task completed", detail: "Research Acme Corp competitors", user: "Pallavi K.", time: "4d ago",
+        links: [{ type: "opp", name: "Acme Corp Website Redesign", self: true }, { type: "custom", name: "Project: Acme Redesign", objectType: "Projects" }] },
+      { type: "sms_in", label: "SMS received from John Smith", detail: "Sounds good, looking forward to it!", user: "John Smith", time: "4d ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "contact", label: "Contact added", detail: "Sarah Chen (Technical Lead) linked as additional contact.", user: "Pallavi K.", time: "5d ago",
+        links: [{ type: "contact", name: "Sarah Chen" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "workflow", label: "Workflow triggered", detail: "\"New Qualified Lead\" workflow — automated welcome email sequence started.", user: "System", time: "5d ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "field", label: "Field updated", detail: "Budget Range changed from \"$5K – $10K\" to \"$10K – $20K\".", user: "Pallavi K.", time: "6d ago",
+        links: [{ type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "appointment_scheduled", label: "Appointment scheduled", detail: "Proposal Review Call — Apr 9, 2:00 PM with John Smith, Sarah Chen.", user: "Pallavi K.", time: "6d ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "contact", name: "Sarah Chen" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "document", label: "Document signed", detail: "NDA Agreement — signed by John Smith via DocuSign.", user: "John Smith", time: "1w ago",
+        links: [{ type: "contact", name: "John Smith" }, { type: "company", name: "Acme Corp" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+      { type: "email_in", label: "Email received from John Smith", detail: "Re: Invoice Q1 Retainer — Got it, thanks for sending that over.", user: "John Smith", time: "1w ago", source: "contact",
+        links: [{ type: "contact", name: "John Smith" }] },
+      { type: "call", label: "Call logged — 15 min", detail: "Quick catch-up with Sarah about team availability next quarter.", user: "Raj M.", time: "1w ago", source: "contact",
+        links: [{ type: "contact", name: "Sarah Chen" }] },
+      { type: "created", label: "Opportunity created", detail: "From \"Request a Quote\" form submission on /pricing.", user: "System", time: "Mar 20",
+        links: [{ type: "contact", name: "John Smith" }, { type: "opp", name: "Acme Corp Website Redesign", self: true }] },
+    ],
+    tasks: [
+      { id: "t1", title: "Send revised proposal", due: "Apr 8", priority: "high", assignee: "Pallavi K.", done: false, source: "opp" },
+      { id: "t2", title: "Schedule demo with tech team", due: "Apr 10", priority: "med", assignee: "Pallavi K.", done: false, source: "opp" },
+      { id: "t3", title: "Research Acme Corp competitors", due: "Apr 3", priority: "low", assignee: "Pallavi K.", done: true, source: "opp" },
+      { id: "t4c", title: "Follow up on newsletter signup", due: "Apr 12", priority: "low", assignee: "Raj M.", done: false, source: "contact", contact: "John Smith" },
+      { id: "t5c", title: "Send birthday gift card", due: "Apr 20", priority: "low", assignee: "Pallavi K.", done: false, source: "contact", contact: "Sarah Chen" },
+    ],
+    notes: [
+      { id: "n1", text: "Client wants to prioritize mobile-first. Budget approved by CFO.", by: "Pallavi K.", time: "2h ago", source: "opp" },
+      { id: "n2", text: "John mentioned bad experience with last agency. Emphasize our PM process and regular check-ins.", by: "Pallavi K.", time: "2d ago", source: "opp" },
+      { id: "n3c", text: "John prefers email over phone for non-urgent items. Best reach Mon–Wed.", by: "Raj M.", time: "1w ago", source: "contact", contact: "John Smith" },
+    ],
+    docs: [
+      { id: "d1", name: "Website Redesign Proposal", type: "Estimate", status: "Viewed", to: "John Smith", date: "Apr 4", source: "opp" },
+      { id: "d2", name: "NDA Agreement", type: "Document", status: "Signed", to: "John Smith", date: "Mar 25", source: "opp" },
+      { id: "d3c", name: "MSA — Acme Corp", type: "Contract", status: "Signed", to: "John Smith", date: "Feb 10", source: "contact", contact: "John Smith" },
+    ],
+    appts: [{ id: "a1", title: "Proposal Review Call", date: "Apr 9, 2:00 PM", with: "John Smith, Sarah Chen", source: "opp" }],
+    contactAppts: [
+      { id: "ca1", title: "Weekly Check-in", date: "Apr 7, 10:00 AM", with: "John Smith", contact: "John Smith", source: "contact" },
+      { id: "ca2", title: "Lunch Meeting", date: "Apr 11, 12:30 PM", with: "John Smith", contact: "John Smith", source: "contact" },
+    ],
+    conversations: [
+      { id: "cv1", channel: "email", contact: "John Smith", subject: "Re: Website Redesign Proposal", lastMsg: "Thanks for the revised scope. Let me loop in Sarah for the tech review.", time: "2h ago", unread: true, source: "opp" },
+      { id: "cv2", channel: "sms", contact: "John Smith", subject: null, lastMsg: "Sounds good, looking forward to it!", time: "4d ago", unread: false, source: "opp" },
+      { id: "cv3", channel: "email", contact: "Sarah Chen", subject: "Re: Technical Requirements", lastMsg: "I've attached our tech stack overview. Can we discuss API integration needs?", time: "3d ago", unread: false, source: "opp" },
+      { id: "cv4c", channel: "email", contact: "John Smith", subject: "Re: Invoice Q1 Retainer", lastMsg: "Got it, thanks for sending that over.", time: "5d ago", unread: false, source: "contact" },
+      { id: "cv5c", channel: "sms", contact: "Sarah Chen", subject: null, lastMsg: "Running 5 min late to standup", time: "1w ago", unread: false, source: "contact" },
+    ],
+    qa: { call: 3, unread: 1, notes: 2, tasks: 2, appt: 1, convos: 3 },
+  },
+  { id: "2", name: "BuildRight CRM Setup", stageId: "s2", stageHistory: [{ stageId: "s1", entered: "Mar 5, 2026", days: 10 }, { stageId: "s2", entered: "Mar 15, 2026", days: 23 }], value: 8500, status: "open", owner: "Raj M.", ownerInit: "RM", participants: [{ name: "Mike Torres", role: "Owner", email: "mike@buildright.com", primary: true }], company: "BuildRight LLC", tags: ["SMB"], products: [{ name: "CRM Setup", qty: 1, price: 8500 }], fields: [{ g: "Deal Info", f: [{ l: "Value", v: "$8,500" }] }], activity: [{ icon: "call", label: "Call logged — 25 min", detail: "Mike is evaluating 3 CRM platforms.", user: "Raj M.", time: "1d ago", color: "#22c55e" }], tasks: [{ id: "t4", title: "Send comparison deck", due: "Apr 9", priority: "med", assignee: "Raj M.", done: false }], notes: [], docs: [], appts: [], lastActivity: "1d ago", qa: { call: 1, unread: 0, notes: 0, tasks: 1, appt: 0 } },
+  { id: "3", name: "Summit Real Estate Portal", stageId: "s2", stageHistory: [{ stageId: "s1", entered: "Feb 20, 2026", days: 5 }, { stageId: "s2", entered: "Feb 25, 2026", days: 41 }], value: 42000, status: "open", owner: "Pallavi K.", ownerInit: "PK", participants: [{ name: "Diana Park", role: "VP Sales", email: "diana@summit.com", primary: true }, { name: "Tom Rivera", role: "IT Director", email: "tom@summit.com", primary: false }, { name: "Lisa Wong", role: "Broker", email: "lisa@summit.com", primary: false }], company: "Summit Realty", tags: ["Enterprise"], products: [{ name: "Portal Dev", qty: 1, price: 35000 }, { name: "Training", qty: 1, price: 7000 }], fields: [{ g: "Deal Info", f: [{ l: "Value", v: "$42,000" }] }], activity: [], tasks: [], notes: [], docs: [], appts: [], lastActivity: "4h ago", qa: { call: 5, unread: 2, notes: 3, tasks: 0, appt: 2 } },
+  { id: "4", name: "FreshBite Marketing", stageId: "s3", stageHistory: [{ stageId: "s1", entered: "Mar 1, 2026", days: 7 }, { stageId: "s2", entered: "Mar 8, 2026", days: 12 }, { stageId: "s3", entered: "Mar 20, 2026", days: 18 }], value: 6200, status: "open", owner: "Raj M.", ownerInit: "RM", participants: [{ name: "Amy Liu", role: "Marketing Dir", email: "amy@freshbite.io", primary: true }], company: "FreshBite", tags: ["Startup"], products: [], fields: [{ g: "Deal Info", f: [{ l: "Value", v: "$6,200" }] }], activity: [], tasks: [], notes: [], docs: [], appts: [], lastActivity: "3d ago", qa: { call: 0, unread: 3, notes: 1, tasks: 0, appt: 0 } },
+  { id: "5", name: "GreenLeaf SEO Retainer", stageId: "s4", stageHistory: [{ stageId: "s1", entered: "Feb 10, 2026", days: 3 }, { stageId: "s2", entered: "Feb 13, 2026", days: 8 }, { stageId: "s3", entered: "Feb 21, 2026", days: 14 }, { stageId: "s4", entered: "Mar 7, 2026", days: 31 }], value: 24000, status: "open", owner: "Pallavi K.", ownerInit: "PK", participants: [{ name: "Robert Kim", role: "CEO", email: "robert@greenleaf.co", primary: true }], company: "GreenLeaf Organics", tags: ["Retainer"], products: [], fields: [{ g: "Deal Info", f: [{ l: "Value", v: "$24,000" }] }], activity: [], tasks: [{ id: "t5", title: "Draft retainer agreement", due: "Apr 7", priority: "high", assignee: "Pallavi K.", done: false }], notes: [], docs: [], appts: [], lastActivity: "6h ago", qa: { call: 2, unread: 0, notes: 0, tasks: 1, appt: 1 } },
+  { id: "6", name: "CloudStack Integration", stageId: "s5", stageHistory: [{ stageId: "s1", entered: "Jan 15, 2026", days: 4 }, { stageId: "s2", entered: "Jan 19, 2026", days: 6 }, { stageId: "s3", entered: "Jan 25, 2026", days: 10 }, { stageId: "s4", entered: "Feb 4, 2026", days: 7 }, { stageId: "s5", entered: "Feb 11, 2026", days: 55 }], value: 18000, status: "won", owner: "Raj M.", ownerInit: "RM", participants: [], company: null, tags: [], products: [], fields: [{ g: "Deal Info", f: [{ l: "Value", v: "$18,000" }] }], activity: [], tasks: [], notes: [], docs: [], appts: [], lastActivity: "1w ago", qa: { call: 4, unread: 0, notes: 1, tasks: 0, appt: 0 } },
+];
+
+const fmt = (n) => "$" + n.toLocaleString();
+
+// ============================================================
+// ACTIVITY TYPES — icon, color, category
+// ============================================================
+const ACT = {
+  note:       { color: "#f59e0b", bg: "#fef3c7", cat: "notes" },
+  email_out:  { color: "#3b82f6", bg: "#dbeafe", cat: "emails" },
+  email_in:   { color: "#8b5cf6", bg: "#ede9fe", cat: "emails" },
+  sms_out:    { color: "#06b6d4", bg: "#cffafe", cat: "sms" },
+  sms_in:     { color: "#0891b2", bg: "#cffafe", cat: "sms" },
+  call:       { color: "#22c55e", bg: "#dcfce7", cat: "calls" },
+  stage:      { color: "#6366f1", bg: "#e0e7ff", cat: "system" },
+  task:       { color: "#14b8a6", bg: "#ccfbf1", cat: "tasks" },
+  created:    { color: "#94a3b8", bg: "#f1f5f9", cat: "system" },
+  form:       { color: "#ec4899", bg: "#fce7f3", cat: "forms" },
+  payment:    { color: "#16a34a", bg: "#dcfce7", cat: "payments" },
+  estimate:   { color: "#f97316", bg: "#ffedd5", cat: "documents" },
+  invoice:    { color: "#16a34a", bg: "#dcfce7", cat: "payments" },
+  appointment:{ color: "#8b5cf6", bg: "#ede9fe", cat: "appointments" },
+  appointment_scheduled: { color: "#7c3aed", bg: "#ede9fe", cat: "appointments" },
+  contact:    { color: "#3b82f6", bg: "#dbeafe", cat: "system" },
+  workflow:   { color: "#a855f7", bg: "#f3e8ff", cat: "system" },
+  field:      { color: "#64748b", bg: "#f1f5f9", cat: "system" },
+  document:   { color: "#059669", bg: "#d1fae5", cat: "documents" },
+};
+
+const ACT_FILTERS = [
+  { id: "all", label: "All" },
+  { id: "emails", label: "Emails" },
+  { id: "calls", label: "Calls" },
+  { id: "sms", label: "SMS" },
+  { id: "notes", label: "Notes" },
+  { id: "tasks", label: "Tasks" },
+  { id: "forms", label: "Forms" },
+  { id: "payments", label: "Payments" },
+  { id: "documents", label: "Documents" },
+  { id: "appointments", label: "Appointments" },
+  { id: "system", label: "System" },
+];
+
+// ============================================================
+// ICONS — clean, consistent
+// ============================================================
+const Ic = {
+  phone: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>,
+  mail: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>,
+  sms: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
+  plus: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  check: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  cal: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  file: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
+  bldg: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M8 10h.01M16 10h.01M12 14h.01M8 14h.01M16 14h.01"/></svg>,
+  x: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  back: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+  expand: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>,
+  dots: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8"><circle cx="12" cy="12" r="1.5" fill={c}/><circle cx="19" cy="12" r="1.5" fill={c}/><circle cx="5" cy="12" r="1.5" fill={c}/></svg>,
+  search: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  filter: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
+  link: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>,
+  dollar: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>,
+  pkg: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>,
+  chevD: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>,
+  users: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
+  note: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  activity: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+  zap: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+  form: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M14 9h4"/><path d="M14 13h4"/><path d="M14 17h4"/></svg>,
+  inbox: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>,
+  send: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+  edit: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>,
+  fields: (s=16,c="currentColor") => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+};
+
+// ============================================================
+// COMPONENTS
+// ============================================================
+const Badge = ({ children, color = "#6366f1" }) => (
+  <span style={{ display: "inline-flex", padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 600, backgroundColor: color + "14", color, lineHeight: "16px", letterSpacing: 0.2 }}>{children}</span>
+);
+
+const Av = ({ text, size = 28, color = "#6366f1" }) => (
+  <div style={{ width: size, height: size, borderRadius: "50%", backgroundColor: color + "15", color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: Math.round(size * 0.36), fontWeight: 700, flexShrink: 0, letterSpacing: -0.5 }}>{text}</div>
+);
+
+const Btn = ({ children, primary, icon, onClick, sx }) => (
+  <button onClick={onClick} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 14px", fontSize: 12, fontWeight: 600, borderRadius: 8, border: primary ? "none" : "1px solid #e2e8f0", backgroundColor: primary ? "#3b82f6" : "#fff", color: primary ? "#fff" : "#475569", cursor: "pointer", transition: "all 0.15s", letterSpacing: 0.1, ...sx }}>{icon}{children}</button>
+);
+
+const IcBtn = ({ icon, active, onClick, title }) => (
+  <button onClick={onClick} title={title} style={{ width: 34, height: 34, borderRadius: 8, border: "none", backgroundColor: active ? "#eff6ff" : "transparent", color: active ? "#3b82f6" : "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, transition: "all 0.15s" }}
+    onMouseEnter={e => { if (!active) e.currentTarget.style.backgroundColor = "#f1f5f9"; }}
+    onMouseLeave={e => { if (!active) e.currentTarget.style.backgroundColor = "transparent"; }}
+  >{icon}</button>
+);
+
+// ============================================================
+// CARD FIELD CONFIG — for Customize Card panel
+// ============================================================
+// Source tag colors
+const SOURCE_TAGS = {
+  opp:     { label: "opportunity", color: "#8b5cf6", bg: "#ede9fe" },
+  contact: { label: "contact",    color: "#3b82f6", bg: "#dbeafe" },
+  company: { label: "company",    color: "#f59e0b", bg: "#fef3c7" },
+};
+
+const CARD_FIELDS = {
+  opp: {
+    label: "Opportunity Details",
+    isNew: true,
+    source: "opp",
+    fields: [
+      { id: "opp_name", label: "Opportunity Name", locked: true, on: true },
+      { id: "opp_value", label: "Opportunity Value", on: true },
+      { id: "opp_owner", label: "Opportunity Owner", on: true },
+      { id: "opp_source", label: "Opportunity Source", on: true },
+      { id: "opp_close", label: "Expected Close Date", on: false, isNew: true },
+      { id: "opp_stage_age", label: "Days in Current Stage", on: false, isNew: true },
+      { id: "opp_products", label: "Products Count", on: false, isNew: true },
+      { id: "opp_lost", label: "Lost Reason", on: false },
+    ]
+  },
+  contact: {
+    label: "Primary Contact Details",
+    isNew: false,
+    source: "contact",
+    fields: [
+      { id: "ct_name", label: "Contact", on: true },
+      { id: "ct_email", label: "Contact's Email", on: false },
+      { id: "ct_phone", label: "Contact's Phone", on: false },
+      { id: "ct_task", label: "Next Task Due Date", on: false },
+      { id: "ct_engage", label: "Engagement Score", on: false },
+      { id: "ct_appt", label: "Days Till Next Appointment", on: false },
+    ]
+  },
+  company: {
+    label: "Company Details",
+    isNew: true,
+    source: "company",
+    fields: [
+      { id: "co_name", label: "Business Name", on: true },
+      { id: "co_industry", label: "Industry", on: false, isNew: true },
+      { id: "co_size", label: "Company Size", on: false, isNew: true },
+    ]
+  }
+};
+
+const CARD_ACTIONS = [
+  { id: "qa_call", label: "Call", icon: Ic.phone, on: true, source: "contact" },
+  { id: "qa_unread", label: "Unread Conversations", icon: Ic.sms, on: true, source: "contact" },
+  { id: "qa_notes", label: "Notes", icon: Ic.note, on: true, source: "opp" },
+  { id: "qa_tasks", label: "Tasks", icon: Ic.check, on: true, source: "opp" },
+  { id: "qa_appt", label: "Upcoming Appointment", icon: Ic.cal, on: true, source: "contact" },
+  { id: "qa_opp_appt", label: "Opportunity Appointments", icon: Ic.cal, on: false, isNew: true, source: "opp" },
+  { id: "qa_products", label: "Products", icon: Ic.pkg, on: false, isNew: true, source: "opp" },
+  { id: "qa_docs", label: "Documents", icon: Ic.file, on: false, isNew: true, source: "opp" },
+];
+
+// ============================================================
+// CUSTOMIZE CARD PANEL
+// ============================================================
+const CustomizeCard = ({ onClose }) => {
+  const [tab, setTab] = useState("fields");
+  const [fieldGroups, setFieldGroups] = useState(CARD_FIELDS);
+  const [actions, setActions] = useState(CARD_ACTIONS);
+
+  const toggleField = (groupKey, fieldId) => {
+    setFieldGroups(prev => ({
+      ...prev,
+      [groupKey]: {
+        ...prev[groupKey],
+        fields: prev[groupKey].fields.map(f => f.id === fieldId && !f.locked ? { ...f, on: !f.on } : f)
+      }
+    }));
+  };
+
+  const toggleAction = (actionId) => {
+    setActions(prev => prev.map(a => a.id === actionId ? { ...a, on: !a.on } : a));
+  };
+
+  const totalFields = Object.values(fieldGroups).reduce((s, g) => s + g.fields.filter(f => f.on).length, 0);
+  const totalAvailable = Object.values(fieldGroups).reduce((s, g) => s + g.fields.length, 0);
+
+  return (
+    <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 380, backgroundColor: "#fff", boxShadow: "-8px 0 30px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", zIndex: 20, animation: "si .2s ease" }}>
+
+      {/* Header */}
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}>Customise Card</h3>
+        <IcBtn icon={Ic.x(16)} onClick={onClose} title="Close" />
+      </div>
+
+      {/* Card Preview */}
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9" }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", marginBottom: 8 }}>Card Preview</div>
+        <div style={{ padding: 14, borderRadius: 10, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 6 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>Acme Corp Website Redesign</div>
+            <Av text="PK" size={22} />
+          </div>
+          <div style={{ fontSize: 10, color: "#94a3b8", marginBottom: 4 }}>Stale</div>
+          {/* Dynamic preview rows with source-colored left border */}
+          {(() => {
+            const previewData = {
+              co_name: "Acme Corp", opp_source: "Referral", opp_value: "$15,000",
+              opp_close: "May 15, 2026", opp_stage_age: "12 days", opp_products: "2",
+              opp_lost: "Budget Constraints", ct_name: "John Smith", ct_email: "john@acme.com",
+              ct_phone: "+1 555-0123", ct_task: "Apr 8", ct_engage: "85",
+              ct_appt: "3 days", co_industry: "Technology", co_size: "50-200",
+            };
+            const rows = [];
+            Object.entries(fieldGroups).forEach(([key, group]) => {
+              group.fields.filter(f => f.on && !f.locked).forEach(f => {
+                rows.push({ ...f, source: group.source, value: previewData[f.id] || "—" });
+              });
+            });
+            return rows.map(r => {
+              const st = SOURCE_TAGS[r.source];
+              return (
+                <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2, paddingLeft: 8, borderLeft: `2px solid ${st?.color || "#94a3b8"}30` }}>
+                  <span style={{ fontSize: 11, color: "#94a3b8", minWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.label.length > 14 ? r.label.slice(0, 14) + "..." : r.label}:</span>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: "#1e293b" }}>{r.value}</span>
+                </div>
+              );
+            });
+          })()}
+          <div style={{ display: "flex", gap: 6, marginTop: 8, paddingTop: 8, borderTop: "1px solid #f1f5f9" }}>
+            {actions.filter(a => a.on).map(a => (
+              <div key={a.id} style={{ width: 22, height: 22, borderRadius: 4, backgroundColor: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {a.icon(12, "#94a3b8")}
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Source legend */}
+        <div style={{ display: "flex", gap: 10, marginTop: 8, justifyContent: "center" }}>
+          {Object.entries(SOURCE_TAGS).map(([key, st]) => (
+            <div key={key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: st.color + "40" }} />
+              <span style={{ fontSize: 10, color: "#94a3b8" }}>{st.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb" }}>
+        <button onClick={() => setTab("fields")} style={{ flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 700, border: "none", borderBottom: tab === "fields" ? "2px solid #3b82f6" : "2px solid transparent", backgroundColor: "transparent", color: tab === "fields" ? "#3b82f6" : "#94a3b8", cursor: "pointer" }}>
+          Fields ({totalFields} out of {totalAvailable})
+        </button>
+        <button onClick={() => setTab("actions")} style={{ flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 700, border: "none", borderBottom: tab === "actions" ? "2px solid #3b82f6" : "2px solid transparent", backgroundColor: "transparent", color: tab === "actions" ? "#3b82f6" : "#94a3b8", cursor: "pointer" }}>
+          Quick actions
+        </button>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        {tab === "fields" && (
+          <div>
+            {/* Migration banner */}
+            <div style={{ margin: "12px 16px", padding: "10px 14px", borderRadius: 8, backgroundColor: "#eff6ff", border: "1px solid #bfdbfe", display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                <span style={{ color: "#fff", fontSize: 11, fontWeight: 800 }}>!</span>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#1e40af", marginBottom: 2 }}>New opportunity fields available</div>
+                <div style={{ fontSize: 11, color: "#3b82f6", lineHeight: 1.4 }}>Opportunity-first fields like Expected Close Date and Days in Stage are now available. Enable them below.</div>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div style={{ padding: "0 16px 8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", borderRadius: 8, border: "1px solid #e5e7eb" }}>
+                {Ic.search(13, "#94a3b8")}
+                <input placeholder="Search fields" style={{ flex: 1, border: "none", outline: "none", fontSize: 12, backgroundColor: "transparent" }} />
+              </div>
+            </div>
+
+            {/* Field groups */}
+            {Object.entries(fieldGroups).map(([key, group]) => (
+              <div key={key} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", backgroundColor: "#fafbfc" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>{group.label}</span>
+                    {group.isNew && <span style={{ fontSize: 9, fontWeight: 700, color: "#3b82f6", backgroundColor: "#dbeafe", padding: "1px 6px", borderRadius: 3 }}>New</span>}
+                  </div>
+                  <span style={{ fontSize: 11, color: "#94a3b8" }}>{Ic.chevD(13, "#94a3b8")}</span>
+                </div>
+                <div style={{ padding: "4px 8px 8px" }}>
+                  {group.fields.map(f => (
+                    <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 6, cursor: f.locked ? "default" : "pointer" }}
+                      onClick={() => !f.locked && toggleField(key, f.id)}
+                      onMouseEnter={e => { if (!f.locked) e.currentTarget.style.backgroundColor = "#f8fafc"; }}
+                      onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
+                    >
+                      {/* Drag handle */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2, cursor: "grab", opacity: 0.3 }}>
+                        <div style={{ width: 8, display: "flex", gap: 2 }}><div style={{ width: 3, height: 3, borderRadius: 1, backgroundColor: "#94a3b8" }} /><div style={{ width: 3, height: 3, borderRadius: 1, backgroundColor: "#94a3b8" }} /></div>
+                        <div style={{ width: 8, display: "flex", gap: 2 }}><div style={{ width: 3, height: 3, borderRadius: 1, backgroundColor: "#94a3b8" }} /><div style={{ width: 3, height: 3, borderRadius: 1, backgroundColor: "#94a3b8" }} /></div>
+                      </div>
+                      {/* Checkbox */}
+                      <div style={{ width: 18, height: 18, borderRadius: 4, border: f.on ? "none" : "2px solid #d1d5db", backgroundColor: f.on ? "#3b82f6" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {f.on && Ic.check(11, "#fff")}
+                      </div>
+                      {/* Label + source tag */}
+                      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 13, color: f.on ? "#1e293b" : "#94a3b8", fontWeight: 500 }}>{f.label}</span>
+                        {f.isNew && <span style={{ fontSize: 9, fontWeight: 700, color: "#22c55e", backgroundColor: "#dcfce7", padding: "1px 5px", borderRadius: 3 }}>New</span>}
+                      </div>
+                      {/* Source tag + lock */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                        {SOURCE_TAGS[group.source] && (
+                          <span style={{ fontSize: 9, fontWeight: 600, color: SOURCE_TAGS[group.source].color, backgroundColor: SOURCE_TAGS[group.source].bg, padding: "1px 5px", borderRadius: 3 }}>
+                            {SOURCE_TAGS[group.source].label}
+                          </span>
+                        )}
+                        {f.locked && <span style={{ fontSize: 11, color: "#d1d5db" }}>🔒</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === "actions" && (
+          <div style={{ padding: "12px 0" }}>
+            <div style={{ padding: "0 16px 10px", display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 9, color: "#94a3b8" }}>i</span>
+              </div>
+              <span style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.4 }}>Count for each action will be shown in the card wherever applicable.</span>
+            </div>
+            {actions.map(a => (
+              <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", cursor: "pointer" }}
+                onClick={() => toggleAction(a.id)}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = "#f8fafc"}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
+              >
+                {/* Drag handle */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 2, cursor: "grab", opacity: 0.3 }}>
+                  <div style={{ width: 8, display: "flex", gap: 2 }}><div style={{ width: 3, height: 3, borderRadius: 1, backgroundColor: "#94a3b8" }} /><div style={{ width: 3, height: 3, borderRadius: 1, backgroundColor: "#94a3b8" }} /></div>
+                  <div style={{ width: 8, display: "flex", gap: 2 }}><div style={{ width: 3, height: 3, borderRadius: 1, backgroundColor: "#94a3b8" }} /><div style={{ width: 3, height: 3, borderRadius: 1, backgroundColor: "#94a3b8" }} /></div>
+                </div>
+                {/* Checkbox */}
+                <div style={{ width: 18, height: 18, borderRadius: 4, border: a.on ? "none" : "2px solid #d1d5db", backgroundColor: a.on ? "#3b82f6" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {a.on && Ic.check(11, "#fff")}
+                </div>
+                {/* Label + source tag */}
+                <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 5 }}>
+                  <span style={{ fontSize: 13, color: a.on ? "#1e293b" : "#94a3b8", fontWeight: 500 }}>{a.label}</span>
+                  {a.isNew && <span style={{ fontSize: 9, fontWeight: 700, color: "#22c55e", backgroundColor: "#dcfce7", padding: "1px 5px", borderRadius: 3 }}>New</span>}
+                </div>
+                {/* Source tag */}
+                {a.source && SOURCE_TAGS[a.source] && (
+                  <span style={{ fontSize: 9, fontWeight: 600, color: SOURCE_TAGS[a.source].color, backgroundColor: SOURCE_TAGS[a.source].bg, padding: "1px 5px", borderRadius: 3, flexShrink: 0 }}>
+                    {SOURCE_TAGS[a.source].label}
+                  </span>
+                )}
+                {/* Icon preview */}
+                <div style={{ width: 22, height: 22, borderRadius: 4, backgroundColor: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {a.icon(13, "#94a3b8")}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={{ padding: "12px 20px", borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+        <Btn onClick={onClose}>Cancel</Btn>
+        <Btn primary onClick={onClose}>Apply</Btn>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// PIPELINE BOARD
+// ============================================================
+const Board = ({ onSelect, selId }) => {
+  const [showCustomize, setShowCustomize] = useState(false);
+
+  return (
+  <div style={{ display: "flex", flexDirection: "column", height: "100%", backgroundColor: "#f8fafc", position: "relative" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 24px", backgroundColor: "#fff", borderBottom: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#0f172a", letterSpacing: -0.3 }}>Opportunities</h2>
+        <select style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 13, fontWeight: 600, color: "#334155", backgroundColor: "#f8fafc" }}>
+          <option>Sales Pipeline</option><option>Onboarding</option>
+        </select>
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+          {Ic.search(14, "#94a3b8")}
+          <input placeholder="Search..." style={{ border: "none", outline: "none", fontSize: 13, width: 140, backgroundColor: "transparent" }} />
+        </div>
+        <Btn icon={Ic.filter(13)}>Filters</Btn>
+        <Btn icon={Ic.edit(13)} onClick={() => setShowCustomize(true)}>Customise Card</Btn>
+        <Btn primary icon={Ic.plus(13)}>New Opportunity</Btn>
+      </div>
+    </div>
+    <div style={{ display: "flex", gap: 14, padding: "16px 20px", overflowX: "auto", flex: 1 }}>
+      {STAGES.map(stage => {
+        const so = OPPS.filter(o => o.stageId === stage.id);
+        return (
+          <div key={stage.id} style={{ minWidth: 264, maxWidth: 264, display: "flex", flexDirection: "column", backgroundColor: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+            <div style={{ padding: "10px 14px", borderBottom: "1px solid #f1f5f9", borderTop: `3px solid ${stage.color}` }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>{stage.name}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>{so.length}</span>
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#64748b" }}>{fmt(so.reduce((a, o) => a + o.value, 0))}</span>
+              </div>
+            </div>
+            <div style={{ padding: 8, flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+              {so.map(opp => (
+                <div key={opp.id} onClick={() => onSelect(opp)} style={{
+                  padding: 14, borderRadius: 10, cursor: "pointer", transition: "all 0.15s",
+                  border: selId === opp.id ? "1.5px solid #3b82f6" : "1px solid #f1f5f9",
+                  backgroundColor: selId === opp.id ? "#f8fbff" : "#fff",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                }}
+                  onMouseEnter={e => { if (selId !== opp.id) e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)"; }}
+                  onMouseLeave={e => { if (selId !== opp.id) e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)"; }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1e293b", marginBottom: 8, lineHeight: 1.4 }}>{opp.name}</div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: "#1e293b" }}>{fmt(opp.value)}</span>
+                  </div>
+                  {opp.company && <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 8, fontSize: 12, color: "#64748b" }}>{Ic.bldg(11, "#94a3b8")} {opp.company}</div>}
+
+                  {/* Quick Action Icons */}
+                  {opp.qa && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 2, marginBottom: 8, flexWrap: "wrap" }}>
+                      {[
+                        { key: "call", icon: Ic.phone, count: opp.qa.call, tip: "Calls", source: "contact" },
+                        { key: "unread", icon: Ic.sms, count: opp.qa.unread, tip: "Unread", source: "contact" },
+                        { key: "notes", icon: Ic.note, count: opp.qa.notes, tip: "Notes", source: "opp" },
+                        { key: "tasks", icon: Ic.check, count: opp.qa.tasks, tip: "Tasks", source: "opp" },
+                        { key: "appt", icon: Ic.cal, count: opp.qa.appt, tip: "Appointments", source: "opp" },
+                      ].map(qa => (
+                        <div key={qa.key} title={qa.tip} onClick={e => e.stopPropagation()} style={{
+                          display: "flex", alignItems: "center", gap: 3,
+                          padding: "3px 7px", borderRadius: 6,
+                          backgroundColor: qa.count > 0 ? "#f8fafc" : "transparent",
+                          border: qa.count > 0 ? "1px solid #f1f5f9" : "1px solid transparent",
+                          cursor: "pointer", transition: "all 0.15s",
+                          opacity: qa.count > 0 ? 1 : 0.35,
+                        }}
+                          onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#f1f5f9"; e.currentTarget.style.borderColor = "#e2e8f0"; }}
+                          onMouseLeave={e => { e.currentTarget.style.backgroundColor = qa.count > 0 ? "#f8fafc" : "transparent"; e.currentTarget.style.borderColor = qa.count > 0 ? "#f1f5f9" : "transparent"; }}
+                        >
+                          {qa.icon(12, qa.count > 0 ? "#64748b" : "#cbd5e1")}
+                          {qa.count > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", lineHeight: 1 }}>{qa.count}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid #f1f5f9" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <Av text={opp.ownerInit} size={22} />
+                      <span style={{ fontSize: 11, color: "#94a3b8" }}>{opp.owner}</span>
+                    </div>
+                    {opp.participants.length > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        {Ic.users(12, "#cbd5e1")}
+                        <span style={{ fontSize: 11, color: "#94a3b8" }}>{opp.participants.length}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    {/* Customize Card panel */}
+    {showCustomize && (
+      <>
+        <div onClick={() => setShowCustomize(false)} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.05)", zIndex: 15 }} />
+        <CustomizeCard onClose={() => setShowCustomize(false)} />
+      </>
+    )}
+  </div>
+  );
+};
+
+// ============================================================
+// SLIDE-OVER PANEL (quick glance)
+// Two-zone: compact summary top + content area with icon rail (mirrors Workspace)
+// ============================================================
+const Panel = ({ opp, onClose, onExpand }) => {
+  const stage = STAGES.find(s => s.id === opp.stageId);
+  const openTasks = opp.tasks.filter(t => !t.done).length;
+  const [panelTab, setPanelTab] = useState("fields");
+  const [panelHideContact, setPanelHideContact] = useState(false);
+  const [panelCollapsed, setPanelCollapsed] = useState({});
+  const togglePanelGroup = k => setPanelCollapsed(p => ({ ...p, [k]: !p[k] }));
+
+  const panelTabs = [
+    { id: "fields", label: "Details", icon: Ic.fields },
+    { id: "activity", label: "Activity", icon: Ic.activity, count: opp.activity.length },
+    { id: "convos", label: "Conversations", icon: Ic.sms, count: (opp.conversations || []).length },
+    { id: "tasks", label: "Tasks", icon: Ic.check, count: openTasks },
+    { id: "notes", label: "Notes", icon: Ic.note, count: opp.notes.length },
+    { id: "appts", label: "Appts", icon: Ic.cal, count: opp.appts.length + (opp.contactAppts || []).length },
+    { id: "docs", label: "Docs", icon: Ic.file, count: opp.docs.length },
+    { id: "products", label: "Products", icon: Ic.pkg, count: (opp.products || []).length },
+    { id: "assoc", label: "Associations", icon: Ic.link, count: opp.participants.length + (opp.company ? 1 : 0) },
+  ];
+
+  return (
+    <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 520, backgroundColor: "#fff", boxShadow: "-8px 0 30px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column", zIndex: 10, animation: "si .25s ease" }}>
+      <style>{`@keyframes si{from{transform:translateX(100%);opacity:0.8}to{transform:translateX(0);opacity:1}}`}</style>
+
+      {/* Header */}
+      <div style={{ padding: "16px 20px 14px", borderBottom: "1px solid #f1f5f9" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 3 }}>Opportunity</div>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: "#0f172a", lineHeight: 1.3, letterSpacing: -0.3 }}>{opp.name}</h3>
+          </div>
+          <div style={{ display: "flex", gap: 4, marginLeft: 12 }}>
+            <IcBtn icon={Ic.expand(15)} onClick={onExpand} title="Full workspace" />
+            <IcBtn icon={Ic.x(15)} onClick={onClose} title="Close" />
+          </div>
+        </div>
+        {/* Value + stage + owner — compact summary row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+          <span style={{ fontSize: 22, fontWeight: 800, color: "#0f172a", letterSpacing: -0.5 }}>{fmt(opp.value)}</span>
+          <Badge color={stage.color}>{stage.name}</Badge>
+          {opp.status === "won" && <Badge color="#22c55e">Won</Badge>}
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+            <Av text={opp.ownerInit} size={22} color="#6366f1" />
+            <span style={{ fontSize: 11, color: "#64748b", fontWeight: 500 }}>{opp.owner}</span>
+          </div>
+        </div>
+        {/* Stage bar with time labels */}
+        <div style={{ display: "flex", gap: 3 }}>
+          {STAGES.map((s, i) => {
+            const ci = STAGES.findIndex(x => x.id === opp.stageId);
+            const sh = (opp.stageHistory || []).find(h => h.stageId === s.id);
+            const active = s.id === opp.stageId;
+            const done = i < ci;
+            return (
+              <div key={s.id} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                <div style={{ width: "100%", height: 4, borderRadius: 2, backgroundColor: i <= ci ? (active ? s.color : s.color + "60") : "#e5e7eb", transition: "all 0.3s" }} />
+                {sh && <span style={{ fontSize: 8, fontWeight: 600, color: active ? s.color : done ? "#94a3b8" : "#cbd5e1", lineHeight: 1 }}>{sh.days}d</span>}
+              </div>
+            );
+          })}
+        </div>
+        {/* Compact association chips */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+          {opp.company && (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 6, backgroundColor: "#f8fafc", border: "1px solid #f1f5f9", cursor: "pointer" }}>
+              {Ic.bldg(11, "#3b82f6")}
+              <span style={{ fontSize: 11, fontWeight: 600, color: "#334155" }}>{opp.company}</span>
+            </div>
+          )}
+          {(() => {
+            const primary = opp.participants.find(p => p.primary);
+            return primary ? (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 6, backgroundColor: "#f8fafc", border: "1px solid #f1f5f9", cursor: "pointer" }}>
+                <Av text={primary.name.split(" ").map(n => n[0]).join("")} size={16} color="#3b82f6" />
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#334155" }}>{primary.name}</span>
+                {opp.participants.length > 1 && <span style={{ fontSize: 9, fontWeight: 700, color: "#64748b", backgroundColor: "#e5e7eb", borderRadius: 99, padding: "1px 5px" }}>+{opp.participants.length - 1}</span>}
+              </div>
+            ) : null;
+          })()}
+        </div>
+      </div>
+
+      {/* Two-zone body: content area + icon rail — same as Workspace */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+
+        {/* Content area */}
+        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+          {/* Content header — contextual action button */}
+          <div style={{ padding: "10px 18px", borderBottom: "1px solid #f1f5f9" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#1e293b", letterSpacing: -0.1 }}>{panelTabs.find(t => t.id === panelTab)?.label}</span>
+              {panelTab === "activity" && (
+                <div style={{ display: "flex", gap: 4 }}>
+                  <Btn icon={Ic.note(11)} sx={{ padding: "3px 8px", fontSize: 10 }}>Note</Btn>
+                  <Btn icon={Ic.phone(11)} sx={{ padding: "3px 8px", fontSize: 10 }}>Call</Btn>
+                  <Btn icon={Ic.mail(11)} sx={{ padding: "3px 8px", fontSize: 10 }}>Email</Btn>
+                </div>
+              )}
+              {panelTab === "convos" && (
+                <div style={{ display: "flex", gap: 4 }}>
+                  <Btn icon={Ic.mail(11)} sx={{ padding: "3px 8px", fontSize: 10 }}>Email</Btn>
+                  <Btn icon={Ic.sms(11)} sx={{ padding: "3px 8px", fontSize: 10 }}>SMS</Btn>
+                </div>
+              )}
+              {panelTab === "tasks" && <Btn primary icon={Ic.plus(11)} sx={{ padding: "3px 10px", fontSize: 11 }}>Add Task</Btn>}
+              {panelTab === "notes" && <Btn primary icon={Ic.plus(11)} sx={{ padding: "3px 10px", fontSize: 11 }}>Add Note</Btn>}
+              {panelTab === "appts" && <Btn primary icon={Ic.plus(11)} sx={{ padding: "3px 10px", fontSize: 11 }}>Book</Btn>}
+            {panelTab === "docs" && <Btn primary icon={Ic.plus(11)} sx={{ padding: "3px 10px", fontSize: 11 }}>Upload</Btn>}
+            {panelTab === "products" && <Btn primary icon={Ic.plus(11)} sx={{ padding: "3px 10px", fontSize: 11 }}>Add Product</Btn>}
+            {panelTab === "assoc" && <Btn primary icon={Ic.plus(11)} sx={{ padding: "3px 10px", fontSize: 11 }}>Link</Btn>}
+            </div>
+            {/* Source filter */}
+            {["activity", "convos", "tasks", "notes", "appts", "docs"].includes(panelTab) && (
+              <div style={{ marginTop: 6 }}>
+                <button onClick={() => setPanelHideContact(p => !p)} style={{
+                  display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 99, fontSize: 10, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+                  backgroundColor: panelHideContact ? "#8b5cf6" : "#fff",
+                  color: panelHideContact ? "#fff" : "#64748b",
+                  border: panelHideContact ? "1px solid #8b5cf6" : "1px solid #e5e7eb",
+                }}>
+                  {panelHideContact ? Ic.check(9, "#fff") : null}
+                  This opp only
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Scrollable content */}
+          <div style={{ flex: 1, overflowY: "auto", padding: panelTab === "fields" ? 0 : 14 }}>
+
+            {/* Fields / Details */}
+            {panelTab === "fields" && (
+              <>
+                {/* Owner */}
+                <div style={{ padding: "14px 18px", borderBottom: "1px solid #f1f5f9" }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Owner</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Av text={opp.ownerInit} size={26} color="#6366f1" />
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b" }}>{opp.owner}</div>
+                      <div style={{ fontSize: 10, color: "#94a3b8" }}>Assigned owner</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Associations */}
+                <div style={{ borderBottom: "1px solid #f1f5f9" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 18px 4px" }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>Associations</div>
+                    <button onClick={() => setPanelTab("assoc")} style={{ fontSize: 10, color: "#3b82f6", background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}>View all →</button>
+                  </div>
+                  {/* Company */}
+                  <div style={{ padding: "4px 18px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, backgroundColor: "#f8fafc", border: "1px solid #f1f5f9", cursor: "pointer" }}>
+                      <div style={{ width: 26, height: 26, borderRadius: 6, backgroundColor: opp.company ? "#dbeafe" : "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {Ic.bldg(12, opp.company ? "#3b82f6" : "#cbd5e1")}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, lineHeight: 1 }}>Company</div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: opp.company ? "#1e293b" : "#94a3b8", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {opp.company || "None linked"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Primary Contact */}
+                  <div style={{ padding: "4px 18px 8px" }}>
+                    {(() => {
+                      const primary = opp.participants.find(p => p.primary);
+                      return (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, backgroundColor: "#f8fafc", border: "1px solid #f1f5f9", cursor: "pointer" }}>
+                          {primary ? (
+                            <Av text={primary.name.split(" ").map(n => n[0]).join("")} size={26} color="#3b82f6" />
+                          ) : (
+                            <div style={{ width: 26, height: 26, borderRadius: "50%", backgroundColor: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              {Ic.users(12, "#cbd5e1")}
+                            </div>
+                          )}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, lineHeight: 1 }}>Primary Contact</div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: primary ? "#1e293b" : "#94a3b8", marginTop: 1 }}>
+                              {primary ? primary.name : "None linked"}
+                            </div>
+                          </div>
+                          {opp.participants.length > 1 && (
+                            <span style={{ fontSize: 9, fontWeight: 700, color: "#64748b", backgroundColor: "#e5e7eb", borderRadius: 99, padding: "1px 6px" }}>+{opp.participants.length - 1}</span>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                {/* Field groups — inline editable */}
+                {(opp.fields || []).map((g, gi) => (
+                  <div key={gi} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                    <button onClick={() => togglePanelGroup(g.g)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "10px 18px", border: "none", backgroundColor: "#fafbfc", cursor: "pointer" }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>{g.g}</span>
+                      <span style={{ color: "#94a3b8", transform: panelCollapsed[g.g] ? "rotate(-90deg)" : "rotate(0)", transition: "0.15s" }}>{Ic.chevD(12)}</span>
+                    </button>
+                    {!panelCollapsed[g.g] && (
+                      <div style={{ padding: "0 18px 10px" }}>
+                        {g.f.map((f, fi) => (
+                          <div key={fi} className="editable-field" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 4px", margin: "0 -4px", borderRadius: 6, borderBottom: fi < g.f.length - 1 ? "1px solid #f8fafc" : "none", cursor: "pointer", transition: "background 0.1s" }}
+                            onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#f8fafc"; e.currentTarget.querySelector('.edit-icon').style.opacity = 1; }}
+                            onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.querySelector('.edit-icon').style.opacity = 0; }}
+                          >
+                            <span style={{ fontSize: 11, color: "#94a3b8" }}>{f.l}</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                              <span style={{ fontSize: 11, color: "#1e293b", fontWeight: 500, textAlign: "right" }}>{f.v}</span>
+                              <span className="edit-icon" style={{ opacity: 0, transition: "opacity 0.15s", display: "flex" }}>{Ic.edit(11, "#94a3b8")}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* Footer */}
+                <div style={{ padding: "10px 18px", fontSize: 11, color: "#94a3b8" }}>
+                  <div>Created: {opp.created || "Mar 20, 2026"}</div>
+                </div>
+              </>
+            )}
+
+            {/* Activity */}
+            {panelTab === "activity" && (() => {
+              const isContactAct = (a) => a.source === "contact" || (!(a.links || []).some(l => l.self));
+              const panelActivity = panelHideContact ? opp.activity.filter(a => !isContactAct(a)) : opp.activity;
+              return (
+              <>
+                {panelActivity.slice(0, 8).map((a, i) => {
+                  const meta = ACT[a.type] || { color: "#94a3b8", bg: "#f1f5f9" };
+                  return (
+                    <div key={i} style={{ display: "flex", gap: 10 }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 24, flexShrink: 0 }}>
+                        <div style={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: meta.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: meta.color }} />
+                        </div>
+                        {i < Math.min(panelActivity.length, 8) - 1 && <div style={{ width: 1, flex: 1, backgroundColor: "#f1f5f9", minHeight: 10 }} />}
+                      </div>
+                      <div style={{ flex: 1, paddingBottom: 14, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", lineHeight: 1.3 }}>{a.label}</div>
+                        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{a.time} · {a.user}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {panelActivity.length > 8 && (
+                  <button onClick={onExpand} style={{ width: "100%", padding: "8px 0", border: "none", backgroundColor: "transparent", color: "#3b82f6", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                    View all {panelActivity.length} activities →
+                  </button>
+                )}
+                {panelActivity.length === 0 && <Empty text={panelHideContact ? "No opp-specific activity" : "No activity yet"} />}
+              </>
+            );
+            })()}
+
+            {/* Conversations */}
+            {panelTab === "convos" && (() => {
+              const convos = (opp.conversations || []).filter(cv => !panelHideContact || cv.source !== "contact");
+              return (
+              <>
+                {convos.map(cv => {
+                  const chColor = cv.channel === "email" ? "#3b82f6" : cv.channel === "sms" ? "#06b6d4" : "#22c55e";
+                  const chLabel = cv.channel === "email" ? "Email" : cv.channel === "sms" ? "SMS" : "WhatsApp";
+                  const isContact = cv.source === "contact";
+                  return (
+                    <div key={cv.id} style={{ padding: "12px 14px", borderRadius: 8, border: cv.unread ? "1px solid " + chColor + "44" : "1px solid #f1f5f9", marginBottom: 8, backgroundColor: cv.unread ? chColor + "06" : isContact ? "#fafbfc" : "#fff", cursor: "pointer", transition: "all 0.15s" }}
+                      onMouseEnter={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"}
+                      onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                          {cv.channel === "email" ? Ic.mail(13, chColor) : Ic.sms(13, chColor)}
+                          <span style={{ fontSize: 10, fontWeight: 700, color: chColor, textTransform: "uppercase", letterSpacing: 0.3 }}>{chLabel}</span>
+                        </div>
+                        {isContact && <span style={{ fontSize: 9, fontWeight: 600, color: "#3b82f6", backgroundColor: "#dbeafe", padding: "1px 5px", borderRadius: 3 }}>{cv.contact}</span>}
+                        <span style={{ fontSize: 11, color: "#94a3b8", marginLeft: "auto" }}>{cv.time}</span>
+                        {cv.unread && <div style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: chColor, flexShrink: 0 }} />}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", marginBottom: 2 }}>{cv.contact}{cv.subject ? ` — ${cv.subject}` : ""}</div>
+                      <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cv.lastMsg}</div>
+                    </div>
+                  );
+                })}
+                {convos.length === 0 && <Empty text={panelHideContact ? "No opp-specific conversations" : "No conversations linked"} />}
+              </>
+            );
+            })()}
+
+            {/* Tasks */}
+            {panelTab === "tasks" && (() => {
+              const tasks = opp.tasks.filter(t => !panelHideContact || t.source !== "contact");
+              return (
+              <>
+                {tasks.map(t => (
+                  <div key={t.id} style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #f1f5f9", marginBottom: 8, opacity: t.done ? 0.5 : 1, backgroundColor: t.source === "contact" ? "#fafbfc" : "#fff" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: 5, border: t.done ? "none" : "2px solid #d1d5db", backgroundColor: t.done ? "#22c55e" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{t.done && Ic.check(10, "#fff")}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", textDecoration: t.done ? "line-through" : "none", lineHeight: 1.3 }}>{t.title}</div>
+                        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4, display: "flex", alignItems: "center", gap: 8 }}>
+                          <span>Due {t.due}</span>
+                          <Badge color={t.priority === "high" ? "#dc2626" : t.priority === "med" ? "#f59e0b" : "#22c55e"}>{t.priority}</Badge>
+                          {t.source === "contact" && <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: "#3b82f6", fontWeight: 600 }}><span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#3b82f6", display: "inline-block" }} />{t.contact}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {tasks.length === 0 && <Empty text={panelHideContact ? "No opp-specific tasks" : "No tasks yet"} />}
+              </>
+            );
+            })()}
+
+            {/* Notes */}
+            {panelTab === "notes" && (() => {
+              const notes = opp.notes.filter(n => !panelHideContact || n.source !== "contact");
+              return (
+              <>
+                {notes.map(n => (
+                  <div key={n.id} style={{ padding: "12px 14px", borderRadius: 8, border: "1px solid #f1f5f9", marginBottom: 8, backgroundColor: n.source === "contact" ? "#fafbfc" : "#fff" }}>
+                    <div style={{ fontSize: 13, color: "#334155", lineHeight: 1.5 }}>{n.text}</div>
+                    <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 5, display: "flex", alignItems: "center", gap: 6 }}>
+                      <span>{n.by} · {n.time}</span>
+                      {n.source === "contact" && <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: "#3b82f6", fontWeight: 600 }}><span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#3b82f6", display: "inline-block" }} />{n.contact}</span>}
+                    </div>
+                  </div>
+                ))}
+                {notes.length === 0 && <Empty text={panelHideContact ? "No opp-specific notes" : "No notes yet"} />}
+              </>
+            );
+            })()}
+
+            {/* Appointments — dual source */}
+            {panelTab === "appts" && (
+              <>
+                {opp.appts.length > 0 && (
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Opportunity Appointments</div>
+                    {opp.appts.map(a => (
+                      <div key={a.id} style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #dbeafe", marginBottom: 8, backgroundColor: "#fff" }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", marginBottom: 3 }}>{a.title}</div>
+                        <div style={{ fontSize: 12, color: "#64748b" }}>{a.date}</div>
+                        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>With: {a.with}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!panelHideContact && (opp.contactAppts || []).length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                      From Contacts
+                      <span style={{ fontSize: 9, fontWeight: 600, color: "#3b82f6", backgroundColor: "#dbeafe", padding: "1px 5px", borderRadius: 3 }}>inherited</span>
+                    </div>
+                    {opp.contactAppts.map(a => (
+                      <div key={a.id} style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #f1f5f9", marginBottom: 8, backgroundColor: "#fafbfc", opacity: 0.7 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>{a.title}</div>
+                        <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>{a.date}</div>
+                        <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>from {a.contact}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {opp.appts.length === 0 && (!opp.contactAppts || opp.contactAppts.length === 0 || panelHideContact) && opp.appts.length === 0 && <Empty text={panelHideContact ? "No opp-specific appointments" : "No appointments"} />}
+              </>
+            )}
+
+            {/* Documents */}
+            {panelTab === "docs" && (() => {
+              const docs = opp.docs.filter(d => !panelHideContact || d.source !== "contact");
+              return (
+              <>
+                {docs.map(d => (
+                  <div key={d.id} style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #f1f5f9", marginBottom: 8, backgroundColor: d.source === "contact" ? "#fafbfc" : "#fff" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{d.name}</span>
+                      <Badge color={d.status === "Signed" ? "#22c55e" : d.status === "Viewed" ? "#3b82f6" : "#94a3b8"}>{d.status}</Badge>
+                    </div>
+                    <div style={{ fontSize: 11, color: "#94a3b8", display: "flex", alignItems: "center", gap: 6 }}>
+                      <span>{d.type} · {d.to} · {d.date}</span>
+                      {d.source === "contact" && <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: "#3b82f6", fontWeight: 600 }}><span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#3b82f6", display: "inline-block" }} />{d.contact}</span>}
+                    </div>
+                  </div>
+                ))}
+                {docs.length === 0 && <Empty text={panelHideContact ? "No opp-specific documents" : "No documents yet"} />}
+              </>
+            );
+            })()}
+
+            {/* Products */}
+            {panelTab === "products" && (
+              <>
+                {(opp.products || []).map((p, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", borderRadius: 8, border: "1px solid #f1f5f9", marginBottom: 8, backgroundColor: "#fff" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{p.name}</div>
+                      <div style={{ fontSize: 11, color: "#94a3b8" }}>Qty: {p.qty}</div>
+                    </div>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>{fmt(p.price)}</span>
+                  </div>
+                ))}
+                {opp.products && opp.products.length > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderTop: "2px solid #3b82f6", marginTop: 4 }}>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "#1e293b" }}>Total</span>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: "#3b82f6" }}>{fmt(opp.products.reduce((s, p) => s + p.price * p.qty, 0))}</span>
+                  </div>
+                )}
+                {(!opp.products || opp.products.length === 0) && <Empty text="No products yet" />}
+              </>
+            )}
+
+            {/* Associations */}
+            {panelTab === "assoc" && (
+              <>
+                {/* Company */}
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Company</div>
+                  {opp.company ? (
+                    <div style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #f1f5f9", backgroundColor: "#fff", display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 6, backgroundColor: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{Ic.bldg(15, "#3b82f6")}</div>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{opp.company}</span>
+                    </div>
+                  ) : (
+                    <button style={{ width: "100%", fontSize: 11, color: "#3b82f6", background: "none", border: "1px dashed #bfdbfe", borderRadius: 8, cursor: "pointer", fontWeight: 600, padding: "12px" }}>+ Link company</button>
+                  )}
+                </div>
+                {/* Contacts */}
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>Contacts ({opp.participants.length})</div>
+                    <button style={{ fontSize: 10, color: "#3b82f6", background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}>+ Add</button>
+                  </div>
+                  {opp.participants.map((p, i) => (
+                    <div key={i} style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #f1f5f9", backgroundColor: "#fff", marginBottom: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                        <Av text={p.name.split(" ").map(n => n[0]).join("")} size={32} color={p.primary ? "#3b82f6" : "#94a3b8"} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", display: "flex", alignItems: "center", gap: 4 }}>{p.name} {p.primary && <Badge color="#3b82f6">Primary</Badge>}</div>
+                          <div style={{ fontSize: 11, color: "#94a3b8" }}>{p.role} · {p.email}</div>
+                        </div>
+                      </div>
+                      {/* Contact Tags — editable */}
+                      <div style={{ paddingLeft: 42 }}>
+                        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center" }}>
+                          {(p.contactTags || []).map((tag, ti) => (
+                            <span key={ti} style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 600, backgroundColor: "#ede9fe", color: "#7c3aed", lineHeight: "16px", cursor: "default" }}>
+                              {tag}
+                              <button style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", color: "#7c3aed", opacity: 0.5 }} title={`Remove "${tag}"`}>{Ic.x(10, "#7c3aed")}</button>
+                            </span>
+                          ))}
+                          <button style={{ display: "inline-flex", alignItems: "center", gap: 2, padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 600, backgroundColor: "#f8fafc", color: "#94a3b8", border: "1px dashed #e2e8f0", cursor: "pointer", lineHeight: "16px" }}>
+                            {Ic.plus(9, "#94a3b8")} tag
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {opp.participants.length === 0 && <div style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>No contacts linked</div>}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Icon rail — same pattern as Workspace right panel */}
+        <div style={{ width: 44, backgroundColor: "#fafbfc", borderLeft: "1px solid #f1f5f9", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, gap: 4, flexShrink: 0 }}>
+          {panelTabs.map(t => (
+            <div key={t.id} onClick={() => setPanelTab(t.id)} title={t.label} style={{
+              width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", transition: "all 0.15s", position: "relative",
+              backgroundColor: panelTab === t.id ? "#eff6ff" : "transparent",
+            }}
+              onMouseEnter={e => { if (panelTab !== t.id) e.currentTarget.style.backgroundColor = "#f1f5f9"; }}
+              onMouseLeave={e => { if (panelTab !== t.id) e.currentTarget.style.backgroundColor = "transparent"; }}
+            >
+              {t.icon(17, panelTab === t.id ? "#3b82f6" : "#94a3b8")}
+              {t.count > 0 && (
+                <div style={{ position: "absolute", top: 2, right: 2, width: 14, height: 14, borderRadius: "50%", backgroundColor: panelTab === t.id ? "#3b82f6" : "#cbd5e1", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 8, fontWeight: 700, color: "#fff" }}>{t.count > 9 ? "9+" : t.count}</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ padding: "12px 18px", borderTop: "1px solid #e5e7eb", display: "flex", gap: 8, backgroundColor: "#fafbfc" }}>
+        <Btn primary icon={Ic.expand(13)} onClick={onExpand} sx={{ flex: 1, justifyContent: "center", padding: "8px 16px", fontSize: 13, borderRadius: 10 }}>Open Full Workspace</Btn>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// FULL WORKSPACE — 3-column, Contact Details page pattern
+// ============================================================
+const Workspace = ({ opp, onBack }) => {
+  const [rp, setRp] = useState("tasks");
+  const [collapsed, setCollapsed] = useState({});
+  const [actFilters, setActFilters] = useState([]); // empty = all; array of category ids for multi-select
+  const [showFilters, setShowFilters] = useState(false);
+  const [hideContact, setHideContact] = useState(false); // source filter: hide contact-inherited items
+  const [composer, setComposer] = useState(null);
+  const [pickerFor, setPickerFor] = useState(null);
+  const [expandedLinks, setExpandedLinks] = useState(null); // index of activity with expanded links
+  const [linkEditor, setLinkEditor] = useState(null); // index of activity being edited for links
+  const stage = STAGES.find(s => s.id === opp.stageId);
+  const toggle = k => setCollapsed(p => ({ ...p, [k]: !p[k] }));
+
+  const rpanels = [
+    { id: "convos", icon: Ic.sms, tip: "Conversations" },
+    { id: "tasks", icon: Ic.check, tip: "Tasks" },
+    { id: "notes", icon: Ic.note, tip: "Notes" },
+    { id: "payments", icon: Ic.dollar, tip: "Payments" },
+    { id: "appts", icon: Ic.cal, tip: "Appointments" },
+    { id: "products", icon: Ic.pkg, tip: "Products" },
+    { id: "assoc", icon: Ic.link, tip: "Associations" },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", backgroundColor: "#f8fafc" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 24px", backgroundColor: "#fff", borderBottom: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <button onClick={onBack} style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid #e2e8f0", backgroundColor: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = "#f8fafc"}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = "#fff"}
+          >{Ic.back(15)}</button>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 1 }}>Opportunity</div>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#0f172a", letterSpacing: -0.3 }}>{opp.name}</h2>
+          </div>
+        </div>
+
+        {/* Stage inline */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, maxWidth: 480, margin: "0 36px" }}>
+          {STAGES.map((s, i) => {
+            const ci = STAGES.findIndex(x => x.id === opp.stageId);
+            const active = s.id === opp.stageId;
+            const done = i < ci;
+            const sh = (opp.stageHistory || []).find(h => h.stageId === s.id);
+            return (
+              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: active ? s.color : done ? s.color + "30" : "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s", boxShadow: active ? `0 0 0 3px ${s.color}25` : "none" }}>
+                    {(active || done) && Ic.check(11, active ? "#fff" : s.color)}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", whiteSpace: "nowrap" }}>
+                    <span style={{ fontSize: 10, fontWeight: active ? 800 : 500, color: active ? s.color : done ? "#64748b" : "#cbd5e1", letterSpacing: 0.1, lineHeight: 1.2 }}>{s.name}</span>
+                    {sh && <span style={{ fontSize: 9, fontWeight: 600, color: active ? s.color + "aa" : done ? "#94a3b8" : "#cbd5e1", lineHeight: 1.2 }}>{sh.days}d</span>}
+                  </div>
+                </div>
+                {i < STAGES.length - 1 && <div style={{ flex: 1, height: 2, borderRadius: 1, backgroundColor: done ? s.color + "40" : "#e5e7eb", minWidth: 8 }} />}
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ display: "flex", gap: 8 }}>
+          <Btn sx={{ backgroundColor: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontWeight: 700 }}>Lost</Btn>
+          <Btn sx={{ backgroundColor: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", fontWeight: 700 }}>Won</Btn>
+          <IcBtn icon={Ic.dots(16)} title="More" />
+        </div>
+      </div>
+
+      {/* 3-column body */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+
+        {/* ====== LEFT: Field Editor ====== */}
+        <div style={{ width: 320, backgroundColor: "#fff", borderRight: "1px solid #e5e7eb", overflowY: "auto", flexShrink: 0 }}>
+          {/* Owner */}
+          <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9" }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Owner</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Av text={opp.ownerInit} size={28} color="#6366f1" />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{opp.owner}</div>
+                <div style={{ fontSize: 11, color: "#94a3b8" }}>Assigned owner</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Associations — labeled rows, clickable, with add action */}
+          <div style={{ borderBottom: "1px solid #f1f5f9" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px 6px" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>Associations</div>
+              <button onClick={() => setRp("assoc")} style={{ fontSize: 10, color: "#3b82f6", background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}>View all →</button>
+            </div>
+
+            {/* Company row */}
+            <div style={{ padding: "6px 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, backgroundColor: "#f8fafc", cursor: "pointer", border: "1px solid #f1f5f9" }}>
+                <div style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: opp.company ? "#dbeafe" : "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {Ic.bldg(13, opp.company ? "#3b82f6" : "#cbd5e1")}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, lineHeight: 1 }}>Company</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: opp.company ? "#1e293b" : "#94a3b8", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {opp.company || "None linked"}
+                  </div>
+                </div>
+                {!opp.company && <span style={{ fontSize: 16, color: "#cbd5e1", lineHeight: 1 }}>+</span>}
+              </div>
+            </div>
+
+            {/* Primary Contact row */}
+            <div style={{ padding: "4px 20px 8px" }}>
+              {(() => {
+                const primary = opp.participants.find(p => p.primary);
+                return (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, backgroundColor: "#f8fafc", cursor: "pointer", border: "1px solid #f1f5f9" }}>
+                    {primary ? (
+                      <Av text={primary.name.split(" ").map(n => n[0]).join("")} size={28} color="#3b82f6" />
+                    ) : (
+                      <div style={{ width: 28, height: 28, borderRadius: "50%", backgroundColor: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {Ic.users(13, "#cbd5e1")}
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, lineHeight: 1 }}>Primary Contact</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: primary ? "#1e293b" : "#94a3b8", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {primary ? primary.name : "None linked"}
+                      </div>
+                    </div>
+                    {opp.participants.length > 1 && (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b", backgroundColor: "#e5e7eb", borderRadius: 99, padding: "2px 7px" }}>+{opp.participants.length - 1}</span>
+                    )}
+                    {opp.participants.length === 0 && <span style={{ fontSize: 16, color: "#cbd5e1", lineHeight: 1 }}>+</span>}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/* Products */}
+          {opp.products && opp.products.length > 0 && (
+            <div style={{ padding: "12px 20px", borderBottom: "1px solid #f1f5f9" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Products</div>
+              {opp.products.map((p, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 12 }}>
+                  <span style={{ color: "#475569" }}>{p.name}</span>
+                  <span style={{ fontWeight: 600, color: "#1e293b" }}>{fmt(p.price)}</span>
+                </div>
+              ))}
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0 0", borderTop: "1px solid #f1f5f9", marginTop: 4 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#1e293b" }}>Total</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: "#3b82f6" }}>{fmt(opp.products.reduce((s, p) => s + p.price * p.qty, 0))}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Field groups — inline editable */}
+          {(opp.fields || []).map((g, gi) => (
+            <div key={gi} style={{ borderBottom: "1px solid #f1f5f9" }}>
+              <button onClick={() => toggle(g.g)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "12px 20px", border: "none", backgroundColor: "#fafbfc", cursor: "pointer" }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>{g.g}</span>
+                <span style={{ color: "#94a3b8", transform: collapsed[g.g] ? "rotate(-90deg)" : "rotate(0)", transition: "0.15s" }}>{Ic.chevD(13)}</span>
+              </button>
+              {!collapsed[g.g] && (
+                <div style={{ padding: "0 20px 12px" }}>
+                  {g.f.map((f, fi) => (
+                    <div key={fi} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 4px", margin: "0 -4px", borderRadius: 6, borderBottom: fi < g.f.length - 1 ? "1px solid #f8fafc" : "none", cursor: "pointer", transition: "background 0.1s" }}
+                      onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#f8fafc"; e.currentTarget.querySelector('.ws-edit-icon').style.opacity = 1; }}
+                      onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.querySelector('.ws-edit-icon').style.opacity = 0; }}
+                    >
+                      <span style={{ fontSize: 11, color: "#94a3b8" }}>{f.l}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <span style={{ fontSize: 12, color: "#1e293b", fontWeight: 500, textAlign: "right" }}>{f.v}</span>
+                        <span className="ws-edit-icon" style={{ opacity: 0, transition: "opacity 0.15s", display: "flex" }}>{Ic.edit(12, "#94a3b8")}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Footer */}
+          <div style={{ padding: "14px 20px", fontSize: 11, color: "#94a3b8" }}>
+            <div>Created: {opp.created || "Mar 20, 2026"}</div>
+            <div style={{ marginTop: 3 }}>Audit Logs: <span style={{ color: "#3b82f6", cursor: "pointer", fontWeight: 600 }}>View</span></div>
+          </div>
+        </div>
+
+        {/* ====== CENTER: Activity Timeline ====== */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
+          {/* Header bar */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", backgroundColor: "#fff", borderBottom: "1px solid #e5e7eb" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {Ic.activity(16, "#64748b")}
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#1e293b", letterSpacing: -0.2 }}>Activity</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", backgroundColor: "#f1f5f9", borderRadius: 99, padding: "1px 7px" }}>{opp.activity.length}</span>
+            </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <button onClick={() => setHideContact(p => !p)} style={{
+                display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 99, fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+                backgroundColor: hideContact ? "#8b5cf6" : "#fff",
+                color: hideContact ? "#fff" : "#64748b",
+                border: hideContact ? "1px solid #8b5cf6" : "1px solid #e5e7eb",
+              }}>
+                {hideContact ? Ic.check(11, "#fff") : null}
+                This opp only
+              </button>
+              <div style={{ width: 1, height: 20, backgroundColor: "#e5e7eb" }} />
+              <IcBtn icon={Ic.filter(15, showFilters || actFilters.length > 0 ? "#3b82f6" : "#94a3b8")} active={showFilters || actFilters.length > 0} onClick={() => setShowFilters(p => !p)} title="Filter activity" />
+              {actFilters.length > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 99, backgroundColor: "#eff6ff", border: "1px solid #bfdbfe" }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "#3b82f6" }}>{actFilters.map(id => ACT_FILTERS.find(f => f.id === id)?.label).join(", ")}</span>
+                  <button onClick={() => setActFilters([])} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", color: "#3b82f6" }}>{Ic.x(12, "#3b82f6")}</button>
+                </div>
+              )}
+              <div style={{ width: 1, height: 20, backgroundColor: "#e5e7eb" }} />
+              <Btn icon={Ic.note(13)} onClick={() => setComposer({ type: "note" })}>Add Note</Btn>
+              <div style={{ position: "relative" }}>
+                <Btn icon={Ic.phone(13)} onClick={() => {
+                  if (opp.participants.length === 0) setPickerFor("call");
+                  else if (opp.participants.length === 1) setComposer({ type: "call", contact: opp.participants[0] });
+                  else setPickerFor("call");
+                }}>Log Call</Btn>
+                {pickerFor === "call" && <ContactPicker contacts={opp.participants} onSelect={c => { setComposer({ type: "call", contact: c }); setPickerFor(null); }} onClose={() => setPickerFor(null)} />}
+              </div>
+              <div style={{ position: "relative" }}>
+                <Btn icon={Ic.mail(13)} onClick={() => {
+                  if (opp.participants.length === 0) setPickerFor("email");
+                  else if (opp.participants.length === 1) setComposer({ type: "email", contact: opp.participants[0] });
+                  else setPickerFor("email");
+                }}>Email</Btn>
+                {pickerFor === "email" && <ContactPicker contacts={opp.participants} onSelect={c => { setComposer({ type: "email", contact: c }); setPickerFor(null); }} onClose={() => setPickerFor(null)} />}
+              </div>
+              <div style={{ position: "relative" }}>
+                <Btn icon={Ic.sms(13)} onClick={() => {
+                  if (opp.participants.length === 0) setPickerFor("sms");
+                  else if (opp.participants.length === 1) setComposer({ type: "sms", contact: opp.participants[0] });
+                  else setPickerFor("sms");
+                }}>SMS</Btn>
+                {pickerFor === "sms" && <ContactPicker contacts={opp.participants} onSelect={c => { setComposer({ type: "sms", contact: c }); setPickerFor(null); }} onClose={() => setPickerFor(null)} />}
+              </div>
+              <div style={{ position: "relative" }}>
+                <Btn icon={Ic.cal(13)} onClick={() => {
+                  if (opp.participants.length === 0) setPickerFor("appt");
+                  else if (opp.participants.length === 1) setComposer({ type: "appt", contact: opp.participants[0] });
+                  else setPickerFor("appt");
+                }}>Book</Btn>
+                {pickerFor === "appt" && <ContactPicker contacts={opp.participants} onSelect={c => { setComposer({ type: "appt", contact: c }); setPickerFor(null); }} onClose={() => setPickerFor(null)} />}
+              </div>
+            </div>
+          </div>
+
+          {/* Collapsible filter bar */}
+          {showFilters && (
+            <div style={{ padding: "8px 20px", backgroundColor: "#fafbfc", borderBottom: "1px solid #f1f5f9", display: "flex", gap: 4, overflowX: "auto", animation: "fadeIn .15s ease" }}>
+              <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}`}</style>
+              {ACT_FILTERS.map(f => {
+                if (f.id === "all") {
+                  const isActive = actFilters.length === 0;
+                  return (
+                    <button key={f.id} onClick={() => setActFilters([])} style={{
+                      padding: "4px 10px", borderRadius: 99, fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+                      backgroundColor: isActive ? "#3b82f6" : "#fff",
+                      color: isActive ? "#fff" : "#64748b",
+                      border: isActive ? "1px solid #3b82f6" : "1px solid #e5e7eb",
+                    }}>All ({opp.activity.length})</button>
+                  );
+                }
+                const count = opp.activity.filter(a => ACT[a.type]?.cat === f.id).length;
+                if (count === 0) return null;
+                const isActive = actFilters.includes(f.id);
+                return (
+                  <button key={f.id} onClick={() => setActFilters(prev => isActive ? prev.filter(x => x !== f.id) : [...prev, f.id])} style={{
+                    padding: "4px 10px", borderRadius: 99, fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+                    backgroundColor: isActive ? "#3b82f6" : "#fff",
+                    color: isActive ? "#fff" : "#64748b",
+                    border: isActive ? "1px solid #3b82f6" : "1px solid #e5e7eb",
+                  }}>
+                    {f.label} <span style={{ opacity: 0.7 }}>({count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Timeline */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
+            {(() => {
+              const isContactActivity = (a) => a.source === "contact" || (!(a.links || []).some(l => l.self));
+              let filtered = actFilters.length === 0 ? opp.activity : opp.activity.filter(a => actFilters.includes(ACT[a.type]?.cat));
+              if (hideContact) filtered = filtered.filter(a => !isContactActivity(a));
+              const getIcon = (type) => {
+                const s = 14;
+                const c = ACT[type]?.color || "#94a3b8";
+                switch(type) {
+                  case "email_out": return Ic.send(s, c);
+                  case "email_in": return Ic.inbox(s, c);
+                  case "sms_out": return Ic.sms(s, c);
+                  case "sms_in": return Ic.sms(s, c);
+                  case "call": return Ic.phone(s, c);
+                  case "note": return Ic.note(s, c);
+                  case "stage": return Ic.activity(s, c);
+                  case "task": return Ic.check(s, c);
+                  case "form": return Ic.form(s, c);
+                  case "payment": return Ic.dollar(s, c);
+                  case "estimate": return Ic.file(s, c);
+                  case "invoice": return Ic.dollar(s, c);
+                  case "appointment": return Ic.cal(s, c);
+                  case "appointment_scheduled": return Ic.cal(s, c);
+                  case "contact": return Ic.users(s, c);
+                  case "workflow": return Ic.zap(s, c);
+                  case "field": return Ic.edit(s, c);
+                  case "document": return Ic.file(s, c);
+                  case "created": return Ic.plus(s, c);
+                  default: return Ic.activity(s, c);
+                }
+              };
+              return filtered.length > 0 ? filtered.map((a, i) => {
+                const meta = ACT[a.type] || { color: "#94a3b8", bg: "#f1f5f9" };
+                return (
+                  <div key={i} style={{ display: "flex", gap: 14, marginBottom: 0 }}>
+                    {/* Timeline rail with icon */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 28, flexShrink: 0 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: "50%", backgroundColor: meta.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {getIcon(a.type)}
+                      </div>
+                      {i < filtered.length - 1 && <div style={{ width: 1, flex: 1, backgroundColor: "#e5e7eb", minHeight: 16 }} />}
+                    </div>
+                    {/* Content */}
+                    <div style={{ flex: 1, paddingBottom: 18, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>
+                          {a.label}
+                          {(() => {
+                            const contactLink = (a.links || []).find(l => l.type === "contact" && !l.self);
+                            if (!contactLink) return null;
+                            return <span style={{ fontWeight: 500, color: "#3b82f6", fontSize: 12 }}> · {contactLink.name}</span>;
+                          })()}
+                        </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 8 }}>
+                          <button onClick={() => setLinkEditor(linkEditor === i ? null : i)} title="Manage linked records" style={{ width: 22, height: 22, borderRadius: 4, border: "none", backgroundColor: linkEditor === i ? "#eff6ff" : "transparent", color: linkEditor === i ? "#3b82f6" : "#cbd5e1", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, opacity: linkEditor === i ? 1 : 0.5, transition: "opacity 0.1s" }}
+                            onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                            onMouseLeave={e => { if (linkEditor !== i) e.currentTarget.style.opacity = 0.5; }}
+                          >{Ic.link(12)}</button>
+                          <span style={{ fontSize: 11, color: "#94a3b8" }}>{a.time}</span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.5 }}>{a.detail}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 11, color: "#94a3b8" }}>by {a.user}</span>
+                        {a.links && (() => {
+                          const otherLinks = a.links.filter(l => !l.self);
+                          if (otherLinks.length === 0) return null;
+                          const linkColors = { contact: "#3b82f6", opp: "#8b5cf6", company: "#f59e0b", custom: "#14b8a6" };
+                          const linkIcons = { contact: Ic.users, opp: Ic.activity, company: Ic.bldg, custom: Ic.link };
+                          const MAX_SHOW = 3;
+                          const visible = otherLinks.slice(0, expandedLinks === i ? otherLinks.length : MAX_SHOW);
+                          const overflow = otherLinks.length - MAX_SHOW;
+                          return (
+                            <>
+                              <span style={{ fontSize: 11, color: "#cbd5e1" }}>·</span>
+                              {Ic.link(10, "#cbd5e1")}
+                              {visible.map((l, li) => (
+                                <span key={li} style={{
+                                  display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 600,
+                                  padding: "2px 7px", borderRadius: 4, cursor: "pointer",
+                                  backgroundColor: (linkColors[l.type] || "#94a3b8") + "10",
+                                  color: linkColors[l.type] || "#94a3b8",
+                                  border: `1px solid ${(linkColors[l.type] || "#94a3b8")}25`,
+                                }}>
+                                  {(linkIcons[l.type] || Ic.link)(9, linkColors[l.type] || "#94a3b8")}
+                                  {l.name}
+                                </span>
+                              ))}
+                              {overflow > 0 && expandedLinks !== i && (
+                                <button onClick={() => setExpandedLinks(i)} style={{
+                                  display: "inline-flex", alignItems: "center", fontSize: 10, fontWeight: 700,
+                                  padding: "2px 7px", borderRadius: 4, cursor: "pointer",
+                                  backgroundColor: "#f1f5f9", color: "#64748b", border: "1px solid #e5e7eb",
+                                }}>+{overflow} more</button>
+                              )}
+                              {expandedLinks === i && otherLinks.length > MAX_SHOW && (
+                                <button onClick={() => setExpandedLinks(null)} style={{
+                                  display: "inline-flex", alignItems: "center", fontSize: 10, fontWeight: 700,
+                                  padding: "2px 7px", borderRadius: 4, cursor: "pointer",
+                                  backgroundColor: "#f1f5f9", color: "#64748b", border: "1px solid #e5e7eb",
+                                }}>show less</button>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                      {/* Inline link editor for this entry */}
+                      {linkEditor === i && (
+                        <div style={{ position: "relative", marginTop: 6 }}>
+                          <LinkRecordPopover
+                            position="below"
+                            existingLinks={a.links || []}
+                            onLink={(r) => { setLinkEditor(null); }}
+                            onClose={() => setLinkEditor(null)}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
+                  <div style={{ fontSize: 13, color: "#94a3b8" }}>No {actFilters.map(id => ACT_FILTERS.find(f => f.id === id)?.label?.toLowerCase()).join(" or ")} activity yet</div>
+                </div>
+              );
+            })()}
+            {opp.activity.length === 0 && (
+              <div style={{ textAlign: "center", padding: "60px 0" }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#475569", marginBottom: 4 }}>No activity yet</div>
+                <div style={{ fontSize: 13, color: "#94a3b8" }}>Add a note or log a call to get started.</div>
+              </div>
+            )}
+          </div>
+
+          {/* Slide-up composer */}
+          {composer && <Composer type={composer.type} contact={composer.contact} onClose={() => setComposer(null)} oppName={opp.name} />}
+        </div>
+
+        {/* ====== RIGHT: Contextual Panel + Icon Bar ====== */}
+        <div style={{ display: "flex", flexShrink: 0 }}>
+          <div style={{ width: 320, backgroundColor: "#fff", borderLeft: "1px solid #e5e7eb", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            {/* Panel header */}
+            <div style={{ padding: "14px 18px", borderBottom: "1px solid #f1f5f9" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>{rpanels.find(p => p.id === rp)?.tip}</span>
+                {rp === "convos" ? (
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <Btn icon={Ic.mail(11)} sx={{ padding: "3px 8px", fontSize: 10 }}>Email</Btn>
+                    <Btn icon={Ic.sms(11)} sx={{ padding: "3px 8px", fontSize: 10 }}>SMS</Btn>
+                  </div>
+                ) : rp !== "assoc" && rp !== "products" ? (
+                  <Btn primary icon={Ic.plus(11)} sx={{ padding: "4px 12px", fontSize: 11 }}>Add</Btn>
+                ) : null}
+              </div>
+              {/* Source filter — shown on tabs that can have contact-inherited items */}
+              {["convos", "tasks", "notes", "payments", "appts"].includes(rp) && (
+                <div style={{ marginTop: 8 }}>
+                  <button onClick={() => setHideContact(p => !p)} style={{
+                    display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 99, fontSize: 10, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+                    backgroundColor: hideContact ? "#8b5cf6" : "#fff",
+                    color: hideContact ? "#fff" : "#64748b",
+                    border: hideContact ? "1px solid #8b5cf6" : "1px solid #e5e7eb",
+                  }}>
+                    {hideContact ? Ic.check(10, "#fff") : null}
+                    This opp only
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Panel content */}
+            <div style={{ flex: 1, overflowY: "auto", padding: 14 }}>
+              {rp === "convos" && (() => {
+                const convos = (opp.conversations || []).filter(cv => !hideContact || cv.source !== "contact");
+                return (
+                <>
+                  {convos.map(cv => {
+                    const chColor = cv.channel === "email" ? "#3b82f6" : cv.channel === "sms" ? "#06b6d4" : "#22c55e";
+                    const chLabel = cv.channel === "email" ? "Email" : cv.channel === "sms" ? "SMS" : "WhatsApp";
+                    const isContact = cv.source === "contact";
+                    return (
+                      <div key={cv.id} style={{ padding: "14px 16px", borderRadius: 10, border: cv.unread ? "1px solid " + chColor + "44" : "1px solid #f1f5f9", marginBottom: 10, backgroundColor: cv.unread ? chColor + "06" : isContact ? "#fafbfc" : "#fff", cursor: "pointer", transition: "all 0.15s" }}
+                        onMouseEnter={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"}
+                        onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                            {cv.channel === "email" ? Ic.mail(14, chColor) : Ic.sms(14, chColor)}
+                            <span style={{ fontSize: 10, fontWeight: 700, color: chColor, textTransform: "uppercase", letterSpacing: 0.3 }}>{chLabel}</span>
+                          </div>
+                          <span style={{ fontSize: 11, color: "#94a3b8", marginLeft: "auto" }}>{cv.time}</span>
+                          {cv.unread && <div style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: chColor, flexShrink: 0 }} />}
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", marginBottom: 3 }}>{cv.contact}{cv.subject ? ` — ${cv.subject}` : ""}</div>
+                        <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>{cv.lastMsg}</div>
+                        <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                          <Badge color={chColor}>{chLabel}</Badge>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: isContact ? "#3b82f6" : "#8b5cf6", fontWeight: 600 }}>
+                            <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: isContact ? "#3b82f6" : "#8b5cf6", display: "inline-block" }} />{isContact ? "contact" : "opp"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {convos.length === 0 && <Empty text={hideContact ? "No opp-specific conversations" : "No conversations linked"} />}
+                </>
+              );
+              })()}
+              {rp === "tasks" && (() => {
+                const tasks = opp.tasks.filter(t => !hideContact || t.source !== "contact");
+                return (
+                <>
+                  {tasks.map(t => (
+                    <div key={t.id} style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #f1f5f9", marginBottom: 8, opacity: t.done ? 0.5 : 1, backgroundColor: t.source === "contact" ? "#fafbfc" : "#fff" }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                        <div style={{ width: 18, height: 18, borderRadius: 5, border: t.done ? "none" : "2px solid #d1d5db", backgroundColor: t.done ? "#22c55e" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{t.done && Ic.check(10, "#fff")}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", textDecoration: t.done ? "line-through" : "none", lineHeight: 1.3 }}>{t.title}</div>
+                          <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4, display: "flex", alignItems: "center", gap: 8 }}>
+                            <span>Due {t.due}</span>
+                            <Badge color={t.priority === "high" ? "#dc2626" : t.priority === "med" ? "#f59e0b" : "#22c55e"}>{t.priority}</Badge>
+                            {t.source === "contact" && <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: "#3b82f6", fontWeight: 600 }}><span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#3b82f6", display: "inline-block" }} />{t.contact}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {tasks.length === 0 && <Empty text={hideContact ? "No opp-specific tasks" : "No tasks yet"} />}
+                </>
+              );
+              })()}
+
+              {rp === "notes" && (() => {
+                const notes = opp.notes.filter(n => !hideContact || n.source !== "contact");
+                return (
+                <>
+                  {notes.map(n => (
+                    <div key={n.id} style={{ padding: "12px 14px", borderRadius: 8, border: "1px solid #f1f5f9", marginBottom: 8, backgroundColor: n.source === "contact" ? "#fafbfc" : "#fff" }}>
+                      <div style={{ fontSize: 13, color: "#334155", lineHeight: 1.5, marginBottom: 6 }}>{n.text}</div>
+                      <div style={{ fontSize: 11, color: "#94a3b8", display: "flex", alignItems: "center", gap: 6 }}>
+                        <span>{n.by} · {n.time}</span>
+                        {n.source === "contact" && <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: "#3b82f6", fontWeight: 600 }}><span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#3b82f6", display: "inline-block" }} />{n.contact}</span>}
+                      </div>
+                    </div>
+                  ))}
+                  {notes.length === 0 && <Empty text={hideContact ? "No opp-specific notes" : "No notes yet"} />}
+                </>
+              );
+              })()}
+
+              {rp === "payments" && (() => {
+                const docs = opp.docs.filter(d => !hideContact || d.source !== "contact");
+                return (
+                <>
+                  {docs.map(d => (
+                    <div key={d.id} style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #f1f5f9", marginBottom: 8, backgroundColor: d.source === "contact" ? "#fafbfc" : "#fff" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{d.name}</span>
+                        <Badge color={d.status === "Signed" ? "#22c55e" : d.status === "Viewed" ? "#3b82f6" : "#94a3b8"}>{d.status}</Badge>
+                      </div>
+                      <div style={{ fontSize: 11, color: "#94a3b8", display: "flex", alignItems: "center", gap: 6 }}>
+                        <span>{d.type} · {d.to} · {d.date}</span>
+                        {d.source === "contact" && <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: "#3b82f6", fontWeight: 600 }}><span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#3b82f6", display: "inline-block" }} />{d.contact}</span>}
+                      </div>
+                    </div>
+                  ))}
+                  {docs.length === 0 && <Empty text={hideContact ? "No opp-specific documents" : "No documents yet"} />}
+                </>
+              );
+              })()}
+
+              {rp === "appts" && (
+                <>
+                  {/* Opportunity-linked appointments */}
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Opportunity Appointments</div>
+                    {opp.appts.map(a => (
+                      <div key={a.id} style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #dbeafe", marginBottom: 8, backgroundColor: "#fff" }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", marginBottom: 4 }}>{a.title}</div>
+                        <div style={{ fontSize: 12, color: "#64748b" }}>{a.date}</div>
+                        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>With: {a.with}</div>
+                      </div>
+                    ))}
+                    {opp.appts.length === 0 && <div style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic", padding: "4px 0" }}>No appointments linked to this opportunity</div>}
+                  </div>
+
+                  {/* Contact-inherited appointments — hidden when filter active */}
+                  {!hideContact && (opp.contactAppts || []).length > 0 && (
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>From Contacts</div>
+                        <button onClick={() => setCollapsed(p => ({ ...p, contactAppts: !p.contactAppts }))} style={{ fontSize: 10, color: "#94a3b8", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+                          {collapsed.contactAppts ? "Show" : "Hide"}
+                        </button>
+                      </div>
+                      {!collapsed.contactAppts && (opp.contactAppts || []).map(a => (
+                        <div key={a.id} style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #f1f5f9", marginBottom: 8, backgroundColor: "#fafbfc", opacity: 0.75 }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>{a.title}</div>
+                            <span style={{ fontSize: 9, fontWeight: 600, color: "#94a3b8", backgroundColor: "#f1f5f9", padding: "2px 6px", borderRadius: 3 }}>from {a.contact}</span>
+                          </div>
+                          <div style={{ fontSize: 12, color: "#64748b" }}>{a.date}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {rp === "products" && (
+                <>
+                  {opp.products.map((p, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderRadius: 8, border: "1px solid #f1f5f9", marginBottom: 8, backgroundColor: "#fff" }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{p.name}</div>
+                        <div style={{ fontSize: 11, color: "#94a3b8" }}>Qty: {p.qty}</div>
+                      </div>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>{fmt(p.price)}</span>
+                    </div>
+                  ))}
+                  {opp.products.length > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", borderTop: "2px solid #3b82f6", marginTop: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: "#1e293b" }}>Total</span>
+                      <span style={{ fontSize: 15, fontWeight: 800, color: "#3b82f6" }}>{fmt(opp.products.reduce((s, p) => s + p.price * p.qty, 0))}</span>
+                    </div>
+                  )}
+                  {opp.products.length === 0 && <Empty text="No products yet" />}
+                </>
+              )}
+
+              {rp === "assoc" && (
+                <>
+                  {/* Company */}
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Company</div>
+                    {opp.company ? (
+                      <div style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #f1f5f9", backgroundColor: "#fff", display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 6, backgroundColor: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{Ic.bldg(16, "#3b82f6")}</div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{opp.company}</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <button style={{ width: "100%", fontSize: 11, color: "#3b82f6", background: "none", border: "1px dashed #bfdbfe", borderRadius: 8, cursor: "pointer", fontWeight: 600, padding: "10px" }}>+ Link company</button>
+                    )}
+                  </div>
+
+                  {/* Contacts */}
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>Contacts ({opp.participants.length})</div>
+                      <button style={{ fontSize: 10, color: "#3b82f6", background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}>+ Add</button>
+                    </div>
+                    {opp.participants.map((p, i) => (
+                      <div key={i} style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #f1f5f9", backgroundColor: "#fff", marginBottom: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: (p.contactTags || []).length > 0 ? 8 : 0 }}>
+                          <Av text={p.name.split(" ").map(n => n[0]).join("")} size={30} color={p.primary ? "#3b82f6" : "#94a3b8"} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", display: "flex", alignItems: "center", gap: 4 }}>{p.name} {p.primary && <Badge color="#3b82f6">Primary</Badge>}</div>
+                            <div style={{ fontSize: 11, color: "#94a3b8" }}>{p.role} · {p.email}</div>
+                          </div>
+                        </div>
+                        {/* Contact Tags — editable */}
+                        {((p.contactTags || []).length > 0 || true) && (
+                          <div style={{ paddingLeft: 38 }}>
+                            <div style={{ display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center" }}>
+                              {(p.contactTags || []).map((tag, ti) => (
+                                <span key={ti} style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 600, backgroundColor: "#ede9fe", color: "#7c3aed", lineHeight: "16px", cursor: "default" }}>
+                                  {tag}
+                                  <button style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", color: "#7c3aed", opacity: 0.5 }} title={`Remove "${tag}"`}>{Ic.x(10, "#7c3aed")}</button>
+                                </span>
+                              ))}
+                              <button style={{ display: "inline-flex", alignItems: "center", gap: 2, padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 600, backgroundColor: "#f8fafc", color: "#94a3b8", border: "1px dashed #e2e8f0", cursor: "pointer", lineHeight: "16px" }}>
+                                {Ic.plus(9, "#94a3b8")} tag
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {opp.participants.length === 0 && <div style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>No contacts linked</div>}
+                  </div>
+
+                  {/* Custom Objects */}
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Custom Objects</div>
+                    <div style={{ padding: "16px 12px", borderRadius: 8, border: "1px dashed #e5e7eb", textAlign: "center" }}>
+                      <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 6 }}>No custom objects linked</div>
+                      <button style={{ fontSize: 11, color: "#3b82f6", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>+ Link object</button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Icon rail */}
+          <div style={{ width: 44, backgroundColor: "#fafbfc", borderLeft: "1px solid #f1f5f9", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, gap: 4 }}>
+            {rpanels.map(p => <IcBtn key={p.id} icon={p.icon(17, rp === p.id ? "#3b82f6" : "#94a3b8")} active={rp === p.id} onClick={() => setRp(p.id)} title={p.tip} />)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// CONTACT PICKER — dropdown when multiple contacts
+// ============================================================
+const ContactPicker = ({ contacts, onSelect, onClose }) => (
+  <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 4, width: 260, backgroundColor: "#fff", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", zIndex: 50, overflow: "hidden", animation: "fadeIn .12s ease" }}>
+    <div style={{ padding: "10px 14px", borderBottom: "1px solid #f1f5f9" }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "#1e293b" }}>Select contact</div>
+    </div>
+    {contacts.length > 0 ? contacts.map((c, i) => (
+      <button key={i} onClick={() => onSelect(c)} style={{
+        display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", border: "none", backgroundColor: "transparent", cursor: "pointer", borderBottom: i < contacts.length - 1 ? "1px solid #f8fafc" : "none",
+      }}
+        onMouseEnter={e => e.currentTarget.style.backgroundColor = "#f8fafc"}
+        onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
+      >
+        <Av text={c.name.split(" ").map(n => n[0]).join("")} size={28} color={c.primary ? "#3b82f6" : "#94a3b8"} />
+        <div style={{ flex: 1, textAlign: "left" }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", display: "flex", alignItems: "center", gap: 4 }}>{c.name} {c.primary && <Badge color="#3b82f6">Primary</Badge>}</div>
+          <div style={{ fontSize: 11, color: "#94a3b8" }}>{c.email}</div>
+        </div>
+      </button>
+    )) : (
+      <div style={{ padding: "16px 14px", textAlign: "center" }}>
+        <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 8 }}>No contacts linked</div>
+        <button style={{ fontSize: 12, fontWeight: 600, color: "#3b82f6", background: "none", border: "1px solid #bfdbfe", borderRadius: 6, padding: "6px 14px", cursor: "pointer" }}>+ Add contact first</button>
+      </div>
+    )}
+    <div onClick={onClose} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: -1 }} />
+  </div>
+);
+
+// ============================================================
+// COMPOSER — slide-up panel for email, SMS, call log, appointment
+// ============================================================
+const Composer = ({ type, contact, onClose, oppName }) => {
+  const [showLinkPopover, setShowLinkPopover] = useState(false);
+  const [extraLinks, setExtraLinks] = useState([]);
+  const titles = { email: "Send Email", sms: "Send SMS", call: "Log Call", appt: "Book Appointment", note: "Add Note" };
+  const icons = { email: Ic.mail, sms: Ic.sms, call: Ic.phone, appt: Ic.cal, note: Ic.note };
+  const TypeIcon = icons[type] || Ic.note;
+  const colors = { email: "#3b82f6", sms: "#06b6d4", call: "#22c55e", appt: "#8b5cf6", note: "#f59e0b" };
+  const color = colors[type] || "#64748b";
+
+  return (
+    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "#fff", borderTop: "1px solid #e5e7eb", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", borderRadius: "12px 12px 0 0", zIndex: 20, animation: "slideUp .2s ease", display: "flex", flexDirection: "column", maxHeight: "55%" }}>
+      <style>{`@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
+
+      {/* Composer header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: "1px solid #f1f5f9" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: color + "15", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {TypeIcon(14, color)}
+          </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>{titles[type]}</div>
+            {contact && <div style={{ fontSize: 11, color: "#94a3b8" }}>to {contact.name} · {contact.email}</div>}
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ padding: "3px 8px", borderRadius: 4, backgroundColor: "#f1f5f9", fontSize: 10, fontWeight: 600, color: "#64748b" }}>
+            Linked to: {oppName}
+          </div>
+          <IcBtn icon={Ic.x(15)} onClick={onClose} title="Close" />
+        </div>
+      </div>
+
+      {/* Composer body — varies by type */}
+      <div style={{ flex: 1, padding: "16px 20px", overflowY: "auto" }}>
+        {type === "note" && (
+          <textarea placeholder="Write a note about this deal..." style={{ width: "100%", height: 100, border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, fontSize: 13, color: "#334155", resize: "vertical", outline: "none", fontFamily: "inherit" }} />
+        )}
+
+        {type === "email" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600, width: 50 }}>To:</span>
+              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 6, backgroundColor: "#f8fafc", border: "1px solid #f1f5f9" }}>
+                <Av text={contact?.name?.split(" ").map(n => n[0]).join("") || "?"} size={20} color="#3b82f6" />
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#1e293b" }}>{contact?.name}</span>
+                <span style={{ fontSize: 11, color: "#94a3b8" }}>({contact?.email})</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600, width: 50 }}>Subject:</span>
+              <input placeholder="Email subject..." style={{ flex: 1, padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 6, fontSize: 13, outline: "none" }} />
+            </div>
+            <textarea placeholder="Write your email..." style={{ width: "100%", height: 120, border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, fontSize: 13, color: "#334155", resize: "vertical", outline: "none", fontFamily: "inherit" }} />
+          </div>
+        )}
+
+        {type === "sms" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600, width: 50 }}>To:</span>
+              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 6, backgroundColor: "#f8fafc", border: "1px solid #f1f5f9" }}>
+                <Av text={contact?.name?.split(" ").map(n => n[0]).join("") || "?"} size={20} color="#06b6d4" />
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#1e293b" }}>{contact?.name}</span>
+              </div>
+            </div>
+            <textarea placeholder="Type your message..." style={{ width: "100%", height: 60, border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, fontSize: 13, color: "#334155", resize: "vertical", outline: "none", fontFamily: "inherit" }} maxLength={160} />
+            <div style={{ fontSize: 11, color: "#94a3b8", textAlign: "right" }}>0/160 characters</div>
+          </div>
+        )}
+
+        {type === "call" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600, width: 70 }}>Called:</span>
+              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 6, backgroundColor: "#f8fafc", border: "1px solid #f1f5f9" }}>
+                <Av text={contact?.name?.split(" ").map(n => n[0]).join("") || "?"} size={20} color="#22c55e" />
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#1e293b" }}>{contact?.name}</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginBottom: 4 }}>Duration</div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input placeholder="Min" type="number" style={{ width: 60, padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 6, fontSize: 13, outline: "none" }} />
+                  <span style={{ fontSize: 12, color: "#94a3b8", alignSelf: "center" }}>min</span>
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginBottom: 4 }}>Outcome</div>
+                <select style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 6, fontSize: 13, color: "#334155", backgroundColor: "#fff" }}>
+                  <option>Connected</option><option>Left voicemail</option><option>No answer</option><option>Busy</option>
+                </select>
+              </div>
+            </div>
+            <textarea placeholder="Call notes..." style={{ width: "100%", height: 80, border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, fontSize: 13, color: "#334155", resize: "vertical", outline: "none", fontFamily: "inherit" }} />
+          </div>
+        )}
+
+        {type === "appt" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600, width: 70 }}>With:</span>
+              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 6, backgroundColor: "#f8fafc", border: "1px solid #f1f5f9" }}>
+                <Av text={contact?.name?.split(" ").map(n => n[0]).join("") || "?"} size={20} color="#8b5cf6" />
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#1e293b" }}>{contact?.name}</span>
+              </div>
+            </div>
+            <input placeholder="Appointment title..." style={{ padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 6, fontSize: 13, outline: "none" }} />
+            <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginBottom: 4 }}>Date</div>
+                <input type="date" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 6, fontSize: 13, color: "#334155" }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginBottom: 4 }}>Time</div>
+                <input type="time" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 6, fontSize: 13, color: "#334155" }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginBottom: 4 }}>Duration</div>
+                <select style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 6, fontSize: 13, color: "#334155", backgroundColor: "#fff" }}>
+                  <option>15 min</option><option>30 min</option><option>45 min</option><option>60 min</option>
+                </select>
+              </div>
+            </div>
+            <textarea placeholder="Notes..." style={{ width: "100%", height: 50, border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, fontSize: 13, color: "#334155", resize: "vertical", outline: "none", fontFamily: "inherit" }} />
+          </div>
+        )}
+      </div>
+
+      {/* Linked records bar */}
+      <div style={{ padding: "8px 20px", borderTop: "1px solid #f1f5f9", backgroundColor: "#fafbfc", position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8" }}>Linked to:</span>
+          {/* Current opportunity — always linked, non-removable */}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, backgroundColor: "#ede9fe", color: "#7c3aed", border: "1px solid #ddd6fe" }}>
+            {Ic.activity(9, "#7c3aed")} {oppName}
+          </span>
+          {/* Contact if selected */}
+          {contact && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, backgroundColor: "#dbeafe", color: "#3b82f6", border: "1px solid #bfdbfe" }}>
+              {Ic.users(9, "#3b82f6")} {contact.name}
+              <button style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", marginLeft: 2 }}>{Ic.x(9, "#3b82f6")}</button>
+            </span>
+          )}
+          {/* Extra linked records */}
+          {extraLinks.map((l, i) => {
+            const lc = { contact: "#3b82f6", opp: "#8b5cf6", company: "#f59e0b", custom: "#14b8a6" }[l.type] || "#94a3b8";
+            const li2 = { contact: Ic.users, opp: Ic.activity, company: Ic.bldg, custom: Ic.link }[l.type] || Ic.link;
+            return (
+              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, backgroundColor: lc + "10", color: lc, border: `1px solid ${lc}25` }}>
+                {li2(9, lc)} {l.name}
+                <button onClick={() => setExtraLinks(p => p.filter((_, j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", marginLeft: 2 }}>{Ic.x(9, lc)}</button>
+              </span>
+            );
+          })}
+          {/* Add more links */}
+          <button onClick={() => setShowLinkPopover(p => !p)} style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, backgroundColor: showLinkPopover ? "#eff6ff" : "#fff", color: showLinkPopover ? "#3b82f6" : "#94a3b8", border: showLinkPopover ? "1px solid #bfdbfe" : "1px dashed #d1d5db", cursor: "pointer" }}>
+            {Ic.plus(9, showLinkPopover ? "#3b82f6" : "#94a3b8")} Link record
+          </button>
+        </div>
+        {/* Link popover */}
+        {showLinkPopover && (
+          <LinkRecordPopover
+            existingLinks={[{ type: "opp", name: oppName }, ...(contact ? [{ type: "contact", name: contact.name }] : []), ...extraLinks]}
+            onLink={r => { setExtraLinks(p => [...p, r]); setShowLinkPopover(false); }}
+            onClose={() => setShowLinkPopover(false)}
+          />
+        )}
+      </div>
+
+      {/* Composer footer */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "10px 20px", borderTop: "1px solid #f1f5f9" }}>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Btn onClick={onClose}>Cancel</Btn>
+          <Btn primary>{type === "email" ? "Send Email" : type === "sms" ? "Send SMS" : type === "call" ? "Save Call Log" : type === "appt" ? "Book Appointment" : "Save Note"}</Btn>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// LINK RECORD POPOVER — search & add associations to an activity
+// ============================================================
+const SAMPLE_RECORDS = [
+  { type: "opp", name: "Acme SEO Retainer", sub: "Opportunity · $24,000 · Negotiation" },
+  { type: "opp", name: "Acme Social Media", sub: "Opportunity · $8,000 · Proposal Sent" },
+  { type: "opp", name: "BuildRight CRM Setup", sub: "Opportunity · $8,500 · Qualified" },
+  { type: "contact", name: "John Smith", sub: "Contact · john@acme.com" },
+  { type: "contact", name: "Sarah Chen", sub: "Contact · sarah@acme.com" },
+  { type: "contact", name: "Diana Park", sub: "Contact · diana@summit.com" },
+  { type: "contact", name: "Mike Torres", sub: "Contact · mike@buildright.com" },
+  { type: "company", name: "Acme Corp", sub: "Company · 3 contacts · 2 opportunities" },
+  { type: "company", name: "BuildRight LLC", sub: "Company · 1 contact · 1 opportunity" },
+  { type: "custom", name: "Project: Acme Redesign", sub: "Projects · In Progress" },
+  { type: "custom", name: "Contract: MSA-2026", sub: "Contracts · Active" },
+  { type: "custom", name: "Ticket: #4521", sub: "Support Tickets · Open" },
+];
+
+const LinkRecordPopover = ({ onLink, onClose, existingLinks = [], position = "above" }) => {
+  const [search, setSearch] = useState("");
+  const [tab, setTab] = useState("all");
+  const linkColors = { contact: "#3b82f6", opp: "#8b5cf6", company: "#f59e0b", custom: "#14b8a6" };
+  const linkIcons = { contact: Ic.users, opp: Ic.activity, company: Ic.bldg, custom: Ic.link };
+  const tabs = [
+    { id: "all", label: "All" },
+    { id: "opp", label: "Opportunities" },
+    { id: "contact", label: "Contacts" },
+    { id: "company", label: "Companies" },
+    { id: "custom", label: "Custom Objects" },
+  ];
+
+  const existingNames = existingLinks.map(l => l.name);
+  const filtered = SAMPLE_RECORDS
+    .filter(r => tab === "all" || r.type === tab)
+    .filter(r => !search || r.name.toLowerCase().includes(search.toLowerCase()) || r.sub.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div style={{ position: "absolute", ...(position === "above" ? { bottom: "100%", marginBottom: 6 } : { top: 0, marginTop: 0 }), left: 0, width: 360, backgroundColor: "#fff", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", zIndex: 60, overflow: "hidden", animation: "fadeIn .12s ease", maxHeight: 420, display: "flex", flexDirection: "column" }}>
+      {/* Header with search */}
+      <div style={{ padding: "12px 14px 8px", borderBottom: "1px solid #f1f5f9" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#1e293b", marginBottom: 8 }}>Link to record</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", borderRadius: 8, border: "1px solid #e5e7eb", backgroundColor: "#fafbfc" }}>
+          {Ic.search(14, "#94a3b8")}
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search records..." autoFocus style={{ flex: 1, border: "none", outline: "none", fontSize: 12, backgroundColor: "transparent", color: "#334155" }} />
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 2, padding: "6px 14px", borderBottom: "1px solid #f1f5f9", overflowX: "auto" }}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{
+            padding: "3px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap",
+            backgroundColor: tab === t.id ? "#3b82f6" : "transparent", color: tab === t.id ? "#fff" : "#64748b",
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* Results */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "4px 0" }}>
+        {filtered.map((r, i) => {
+          const alreadyLinked = existingNames.includes(r.name);
+          const color = linkColors[r.type] || "#94a3b8";
+          const Icon = linkIcons[r.type] || Ic.link;
+          return (
+            <button key={i} onClick={() => !alreadyLinked && onLink(r)} disabled={alreadyLinked} style={{
+              display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 14px", border: "none",
+              backgroundColor: "transparent", cursor: alreadyLinked ? "default" : "pointer", opacity: alreadyLinked ? 0.5 : 1,
+            }}
+              onMouseEnter={e => { if (!alreadyLinked) e.currentTarget.style.backgroundColor = "#f8fafc"; }}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
+            >
+              <div style={{ width: 30, height: 30, borderRadius: 6, backgroundColor: color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {Icon(14, color)}
+              </div>
+              <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                <div style={{ fontSize: 10, color: "#94a3b8" }}>{r.sub}</div>
+              </div>
+              {alreadyLinked && <span style={{ fontSize: 10, fontWeight: 600, color: "#94a3b8" }}>Linked</span>}
+              {!alreadyLinked && <span style={{ fontSize: 10, fontWeight: 600, color: "#3b82f6" }}>+ Link</span>}
+            </button>
+          );
+        })}
+        {filtered.length === 0 && (
+          <div style={{ padding: "20px 14px", textAlign: "center", fontSize: 12, color: "#94a3b8" }}>
+            No records found{search && ` for "${search}"`}
+          </div>
+        )}
+      </div>
+
+      {/* Close backdrop */}
+      <div onClick={onClose} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: -1 }} />
+    </div>
+  );
+};
+
+const Empty = ({ text }) => (
+  <div style={{ textAlign: "center", padding: "36px 0" }}>
+    <div style={{ fontSize: 13, color: "#94a3b8", fontWeight: 500 }}>{text}</div>
+  </div>
+);
+
+// ============================================================
+// APP
+// ============================================================
+const AppRoot = function App() {
+  const [view, setView] = useState("board");
+  const [sel, setSel] = useState(null);
+  const [defaultClick, setDefaultClick] = useState("panel"); // "panel" or "full"
+
+  const handleOppClick = (o) => {
+    setSel(o);
+    setView(defaultClick === "full" ? "full" : "panel");
+  };
+
+  return (
+    <div style={{ height: "100vh", fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: "#0f172a", overflow: "hidden" }}>
+      {/* Nav */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 24px", backgroundColor: "#0f172a" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: -0.3 }}>GoHighLevel</span>
+          <span style={{ color: "#334155", fontSize: 16 }}>/</span>
+          <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 500 }}>Opportunities</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Default click preference */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 10, color: "#64748b", fontWeight: 600 }}>Click opens:</span>
+            <div style={{ display: "flex", gap: 1, backgroundColor: "#1e293b", borderRadius: 5, padding: 1 }}>
+              {[{ id: "panel", label: "Panel" }, { id: "full", label: "Full Page" }].map(o => (
+                <button key={o.id} onClick={() => setDefaultClick(o.id)} style={{
+                  padding: "2px 10px", borderRadius: 4, fontSize: 10, fontWeight: 600, border: "none",
+                  backgroundColor: defaultClick === o.id ? "#3b82f6" : "transparent",
+                  color: defaultClick === o.id ? "#fff" : "#64748b", cursor: "pointer",
+                }}>{o.label}</button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ width: 1, height: 16, backgroundColor: "#334155" }} />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 10px", borderRadius: 6, backgroundColor: "#1e3a5f" }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#34d399" }} />
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#93c5fd" }}>Opportunity-First Mode</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ height: "calc(100vh - 36px)", position: "relative" }}>
+        {view === "full" ? (
+          <Workspace opp={sel} onBack={() => setView(defaultClick === "full" ? "board" : "panel")} />
+        ) : (
+          <>
+            <Board onSelect={handleOppClick} selId={sel?.id} />
+            {view === "panel" && sel && (
+              <>
+                <div onClick={() => { setSel(null); setView("board"); }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.05)", zIndex: 5 }} />
+                <Panel opp={sel} onClose={() => { setSel(null); setView("board"); }} onExpand={() => setView("full")} />
+              </>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<AppRoot />);
+  </script>
+</body>
+</html>
